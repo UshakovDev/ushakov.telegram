@@ -65,6 +65,8 @@ $aTabs = [
             ["SEND_ORDER_NEW", Loc::getMessage("USH_TG_OPT_SEND_ORDER_NEW"), "Y", ["checkbox"]],
             ["SEND_ORDER_STATUS", Loc::getMessage("USH_TG_OPT_SEND_ORDER_STATUS"), "Y", ["checkbox"]],
             ["SEND_ORDER_PAY", Loc::getMessage("USH_TG_OPT_SEND_ORDER_PAY"), "Y", ["checkbox"]],
+            ["SEND_ORDER_CANCELED", Loc::getMessage("USH_TG_OPT_SEND_ORDER_CANCELED"), "Y", ["checkbox"]],
+            ["SEND_ORDER_UNCANCELED", "Снятие отмены заказа", "Y", ["checkbox"]],
             ["SEND_USER_REGISTERED", Loc::getMessage("USH_TG_OPT_SEND_USER_REGISTERED"), "N", ["checkbox"]],
             ["SEND_FORM_NEW", Loc::getMessage("USH_TG_OPT_SEND_FORM_NEW"), "N", ["checkbox"]],
 
@@ -73,6 +75,8 @@ $aTabs = [
             ["TPL_ORDER_NEW", Loc::getMessage("USH_TG_TPL_ORDER_NEW"), Loc::getMessage("USH_TG_TPL_ORDER_NEW_DEF"), ["textarea", 6, 60]],
             ["TPL_ORDER_STATUS", Loc::getMessage("USH_TG_TPL_ORDER_STATUS"), Loc::getMessage("USH_TG_TPL_ORDER_STATUS_DEF"), ["textarea", 6, 60]],
             ["TPL_ORDER_PAY", Loc::getMessage("USH_TG_TPL_ORDER_PAY"), Loc::getMessage("USH_TG_TPL_ORDER_PAY_DEF"), ["textarea", 6, 60]],
+            ["TPL_ORDER_CANCELED", "Шаблон: отмена заказа", "❌ Заказ #ORDER_ID# отменён\nПричина: #REASON#\nСумма: #PRICE#\nСсылка: #ADMIN_URL#", ["textarea", 6, 60]],
+            ["TPL_ORDER_UNCANCELED", "Шаблон: снятие отмены", "♻️ Отмена заказа #ORDER_ID# снята\nСумма: #PRICE#\nСсылка: #ADMIN_URL#", ["textarea", 6, 60]],
             ["TPL_USER_REGISTERED", Loc::getMessage("USH_TG_TPL_USER_REGISTERED"), Loc::getMessage("USH_TG_TPL_USER_REGISTERED_DEF"), ["textarea", 5, 60]],
             ["TPL_FORM_NEW", Loc::getMessage("USH_TG_TPL_FORM_NEW"), Loc::getMessage("USH_TG_TPL_FORM_NEW_DEF"), ["textarea", 6, 60]],
         ],

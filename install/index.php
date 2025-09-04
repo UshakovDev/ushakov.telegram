@@ -99,6 +99,8 @@ class ushakov_telegram extends CModule
         $em->registerEventHandler('main', 'OnAfterUserAdd', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onUserRegistered');
         // Новая заявка (перехват почтовых событий)
         $em->registerEventHandler('main', 'OnBeforeEventAdd', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onBeforeEventAdd');
+        // Отмена заказа
+        $em->registerEventHandler('sale', 'OnSaleCancelOrder', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onSaleCancelOrder');
 
         // Агент обработки очереди (каждые 5 минут)
         // Очередь можно отключить в настройках, но агент регистрируем,
@@ -122,6 +124,7 @@ class ushakov_telegram extends CModule
         $em->unRegisterEventHandler('sale', 'OnSalePayOrder', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onOrderPay');
         $em->unRegisterEventHandler('main', 'OnAfterUserAdd', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onUserRegistered');
         $em->unRegisterEventHandler('main', 'OnBeforeEventAdd', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onBeforeEventAdd');
+        $em->unRegisterEventHandler('sale', 'OnSaleCancelOrder', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onSaleCancelOrder');
 
         \CAgent::RemoveAgent("\\\\Ushakov\\\\Telegram\\\\Agent::process();", $this->MODULE_ID);
         return true;

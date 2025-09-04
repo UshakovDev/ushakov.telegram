@@ -67,6 +67,83 @@ class Events
         }
         return $paymentName;
     }
+
+    // Отмена заказа: поддержка сигнатур (event) и (orderId, isCanceled)
+    public static function onOrderCanceled($arg1, $arg2 = null): void
+    {
+        if (Option::get('ushakov.telegram','SEND_ORDER_CANCELED','Y') !== 'Y') { return; }
+
+        $orderId = 0; $isCanceled = false; $reason = '';
+        if ($arg1 instanceof \Bitrix\Main\Event) {
+            $params = $arg1->getParameters();
+            $order = $params['ENTITY'] ?? null;
+            if ($order) {
+                $orderId = (int)$order->getId();
+                $isCanceled = (bool)$order->isCanceled();
+                if (method_exists($order,'getField')) {
+                    $reason = (string)$order->getField('REASON_CANCELED');
+                }
+            } else {
+                $orderId = (int)($params['ID'] ?? 0);
+                $val = $params['VALUE'] ?? $params['CANCELED'] ?? null;
+                $isCanceled = ($val === true || $val === 'Y' || $val === 1 || $val === '1');
+                $reason = (string)($params['REASON_CANCELED'] ?? '');
+            }
+        } else {
+            $orderId = (int)$arg1;
+            $isCanceled = ($arg2 === true || $arg2 === 'Y' || $arg2 === 1 || $arg2 === '1');
+        }
+
+        if ($orderId <= 0) { return; }
+
+        $order = \Bitrix\Sale\Order::load($orderId);
+        $priceString = '';
+        if ($order) {
+            $priceString = (string)\CCurrencyLang::CurrencyFormat($order->getPrice(), $order->getCurrency());
+            $priceString = html_entity_decode($priceString, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            $priceString = str_replace("\xC2\xA0", ' ', $priceString);
+            if ($reason === '' && method_exists($order,'getField')) {
+                $reason = (string)$order->getField('REASON_CANCELED');
+            }
+        }
+
+        if ($isCanceled) {
+            if (Option::get('ushakov.telegram','SEND_ORDER_CANCELED','Y') !== 'Y') { return; }
+            static $sentCancel = [];
+            $dupKey = 'cancel-'.$orderId;
+            if (isset($sentCancel[$dupKey])) { return; }
+            $sentCancel[$dupKey] = true;
+
+            $tpl = Option::get('ushakov.telegram','TPL_ORDER_CANCELED', '❌ Заказ #ORDER_ID# отменён\nПричина: #REASON#\nСумма: #PRICE#\nСсылка: #ADMIN_URL#');
+            $text = self::render($tpl, [
+                'ORDER_ID' => $orderId,
+                'REASON'   => $reason,
+                'PRICE'    => $priceString,
+                'ADMIN_URL'=> self::buildAbsoluteUrl('/bitrix/admin/sale_order_view.php?ID='.(int)$orderId.'&lang='.LANGUAGE_ID),
+            ]);
+            self::pushOrSend($text);
+        } else {
+            if (Option::get('ushakov.telegram','SEND_ORDER_UNCANCELED','Y') !== 'Y') { return; }
+            static $sentUncancel = [];
+            $dupKey2 = 'uncancel-'.$orderId;
+            if (isset($sentUncancel[$dupKey2])) { return; }
+            $sentUncancel[$dupKey2] = true;
+
+            $tpl2 = Option::get('ushakov.telegram','TPL_ORDER_UNCANCELED', "♻️ Отмена заказа #ORDER_ID# снята\nСумма: #PRICE#\nСсылка: #ADMIN_URL#");
+            $text2 = self::render($tpl2, [
+                'ORDER_ID' => $orderId,
+                'PRICE'    => $priceString,
+                'ADMIN_URL'=> self::buildAbsoluteUrl('/bitrix/admin/sale_order_view.php?ID='.(int)$orderId.'&lang='.LANGUAGE_ID),
+            ]);
+            self::pushOrSend($text2);
+        }
+    }
+
+    // Совместимость: старый обработчик отмены
+    public static function onSaleCancelOrder($orderId, $value): void
+    {
+        self::onOrderCanceled($orderId, $value);
+    }
     protected static function getToken(): string
     {
         return (string) Option::get('ushakov.telegram', 'BOT_TOKEN', '');

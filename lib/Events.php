@@ -122,6 +122,18 @@ class Events
                 'ADMIN_URL'=> self::buildAbsoluteUrl('/bitrix/admin/sale_order_view.php?ID='.(int)$orderId.'&lang='.LANGUAGE_ID),
             ]);
             self::pushOrSend($text);
+
+            if (Option::get('ushakov.telegram','CUSTOMER_NOTIFY_ENABLED','N') === 'Y'
+                && Option::get('ushakov.telegram','CUSTOMER_EVENTS_ORDER_CANCEL','Y') === 'Y') {
+                if ($order) {
+                    $userId = (int)$order->getUserId();
+                    if ($userId > 0) {
+                        $chatId = \Ushakov\Telegram\Repository\BindingRepository::getChatId(SITE_ID, $userId);
+                        $token = self::getToken();
+                        if ($chatId && $token) { Sender::send($token, [(string)$chatId], $text); }
+                    }
+                }
+            }
         } else {
             if (Option::get('ushakov.telegram','SEND_ORDER_UNCANCELED','Y') !== 'Y') { return; }
             static $sentUncancel = [];
@@ -136,6 +148,18 @@ class Events
                 'ADMIN_URL'=> self::buildAbsoluteUrl('/bitrix/admin/sale_order_view.php?ID='.(int)$orderId.'&lang='.LANGUAGE_ID),
             ]);
             self::pushOrSend($text2);
+
+            if (Option::get('ushakov.telegram','CUSTOMER_NOTIFY_ENABLED','N') === 'Y'
+                && Option::get('ushakov.telegram','CUSTOMER_EVENTS_ORDER_UNCANCEL','Y') === 'Y') {
+                if ($order) {
+                    $userId = (int)$order->getUserId();
+                    if ($userId > 0) {
+                        $chatId = \Ushakov\Telegram\Repository\BindingRepository::getChatId(SITE_ID, $userId);
+                        $token = self::getToken();
+                        if ($chatId && $token) { Sender::send($token, [(string)$chatId], $text2); }
+                    }
+                }
+            }
         }
     }
 
@@ -244,6 +268,31 @@ class Events
         ]);
 
         self::pushOrSend($text);
+
+        // Покупателю (если включено)
+        if (Option::get('ushakov.telegram','CUSTOMER_NOTIFY_ENABLED','N') === 'Y'
+            && Option::get('ushakov.telegram','CUSTOMER_EVENTS_ORDER_STATUS','Y') === 'Y') {
+            $order = \Bitrix\Sale\Order::load($orderId);
+            if ($order) {
+                $userId = (int)$order->getUserId();
+                if ($userId > 0) {
+                    $chatId = \Ushakov\Telegram\Repository\BindingRepository::getChatId(SITE_ID, $userId);
+                    $token = self::getToken();
+                    if ($chatId && $token) { Sender::send($token, [(string)$chatId], $text); }
+                }
+            }
+        }
+
+        // Покупателю (если включено)
+        if (Option::get('ushakov.telegram','CUSTOMER_NOTIFY_ENABLED','N') === 'Y'
+            && Option::get('ushakov.telegram','CUSTOMER_EVENTS_ORDER_NEW','Y') === 'Y') {
+            $userId = (int) (method_exists($entity,'getUserId') ? $entity->getUserId() : 0);
+            if ($userId > 0) {
+                $chatId = \Ushakov\Telegram\Repository\BindingRepository::getChatId(SITE_ID, $userId);
+                $token = self::getToken();
+                if ($chatId && $token) { Sender::send($token, [(string)$chatId], $text); }
+            }
+        }
     }
 
     // Совместимость со старыми регистрациями событий: некоторые окружения могли
@@ -258,7 +307,7 @@ class Events
     {
         if (Option::get('ushakov.telegram','SEND_ORDER_STATUS','Y') !== 'Y') { return; }
 
-        $orderId = 0; $before = ''; $after = '';
+        $orderId = 0; $before = ''; $after = ''; $order = null;
         if ($arg1 instanceof \Bitrix\Main\Event) {
             $params = $arg1->getParameters();
             $order  = $params['ENTITY'] ?? null;
@@ -270,8 +319,11 @@ class Events
             // разные версии/обёртки событий могут присылать разные ключи
             $before = (string)($params['STATUS_OLD'] ?? $params['VALUE_BEFORE'] ?? '');
             $after  = (string)($params['STATUS_NEW'] ?? $params['VALUE'] ?? '');
-            if ($after === '' && is_object($order) && method_exists($order, 'getField')) {
-                $after = (string)$order->getField('STATUS_ID');
+            if ($after === '') {
+                $ordTmp = \Bitrix\Sale\Order::load($orderId);
+                if ($ordTmp && method_exists($ordTmp, 'getField')) {
+                    $after = (string)$ordTmp->getField('STATUS_ID');
+                }
             }
         } else {
             $orderId = (int)$arg1;
@@ -463,5 +515,26 @@ class Events
             'FIELDS'     => implode("\n", $pairs),
         ]);
         self::pushOrSend($text);
+    }
+
+    // Врезка на страницу профиля: кнопка «Привязать Telegram»
+    public static function onEpilog(): void
+    {
+        global $USER, $APPLICATION;
+        if (!is_object($USER) || !$USER->IsAuthorized()) { return; }
+        $bot = trim((string) Option::get('ushakov.telegram','BOT_USERNAME',''));
+        if ($bot === '') { return; }
+
+        // Определяем, что мы на странице профиля (настройте путь под ваш проект)
+        $uri = (string)$APPLICATION->GetCurPage(false);
+        $isProfile = (stripos($uri, '/personal/profile') !== false) || (stripos($uri, '/personal/') !== false && stripos($uri, 'profile') !== false);
+        if (!$isProfile) { return; }
+
+        $deep = \Ushakov\Telegram\Service\WebhookRegistrar::buildDeepLink($bot, SITE_ID, (int)$USER->GetID());
+
+        // Безопасный динамический фрейм (не ломает композит)
+        echo '<div class="ushakov-tg-profile" style="margin-top:16px">';
+        echo '<a class="btn btn-primary" style="display:inline-block;padding:8px 12px;background:#2fc6f6;color:#fff;border-radius:4px;text-decoration:none" target="_blank" href="'.htmlspecialcharsbx($deep).'">'.htmlspecialcharsbx(Loc::getMessage('USH_TG_DEEPLINK') ?: 'Привязать Telegram').'</a>';
+        echo '</div>';
     }
 }

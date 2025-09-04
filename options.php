@@ -56,6 +56,7 @@ $aTabs = [
             ["BOT_USERNAME", Loc::getMessage("USH_TG_OPT_BOT_USERNAME"), "", ["text", 30]],
             ["WEBHOOK_PUBLIC_HOST", Loc::getMessage("USH_TG_OPT_WEBHOOK_PUBLIC_HOST"), "", ["text", 60]],
             ["DEFAULT_CHAT_IDS", Loc::getMessage("USH_TG_OPT_CHAT_IDS"), "", ["text", 50]],
+            ["STAFF_GROUP_IDS", Loc::getMessage("USH_TG_OPT_STAFF_GROUPS"), "1", ["text", 30]],
             ["USE_QUEUE", Loc::getMessage("USH_TG_OPT_USE_QUEUE"), "Y", ["checkbox"]],
             ["ENABLE_LOGS", Loc::getMessage("USH_TG_OPT_ENABLE_LOGS"), "Y", ["checkbox"]],
             ["LOG_RETENTION_DAYS", Loc::getMessage("USH_TG_OPT_LOG_RETENTION"), "14", ["text", 5]],
@@ -69,6 +70,15 @@ $aTabs = [
             ["SEND_ORDER_UNCANCELED", "Снятие отмены заказа", "Y", ["checkbox"]],
             ["SEND_USER_REGISTERED", Loc::getMessage("USH_TG_OPT_SEND_USER_REGISTERED"), "N", ["checkbox"]],
             ["SEND_FORM_NEW", Loc::getMessage("USH_TG_OPT_SEND_FORM_NEW"), "N", ["checkbox"]],
+
+            // Клиентские уведомления
+            Loc::getMessage("USH_TG_SECTION_CUSTOMERS"),
+            ["CUSTOMER_NOTIFY_ENABLED", Loc::getMessage("USH_TG_OPT_CUSTOMER_ENABLED"), "N", ["checkbox"]],
+            ["CUSTOMER_EVENTS_ORDER_NEW", Loc::getMessage("USH_TG_OPT_CUSTOMER_ORDER_NEW"), "Y", ["checkbox"]],
+            ["CUSTOMER_EVENTS_ORDER_STATUS", Loc::getMessage("USH_TG_OPT_CUSTOMER_ORDER_STATUS"), "Y", ["checkbox"]],
+            ["CUSTOMER_EVENTS_ORDER_PAY", Loc::getMessage("USH_TG_OPT_CUSTOMER_ORDER_PAY"), "Y", ["checkbox"]],
+            ["CUSTOMER_EVENTS_ORDER_CANCEL", Loc::getMessage("USH_TG_OPT_CUSTOMER_ORDER_CANCEL"), "Y", ["checkbox"]],
+            ["CUSTOMER_EVENTS_ORDER_UNCANCEL", Loc::getMessage("USH_TG_OPT_CUSTOMER_ORDER_UNCANCEL"), "Y", ["checkbox"]],
 
             // Шаблоны
             Loc::getMessage("USH_TG_SECTION_TEMPLATES"),

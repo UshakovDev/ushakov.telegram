@@ -101,6 +101,8 @@ class ushakov_telegram extends CModule
         $em->registerEventHandler('main', 'OnBeforeEventAdd', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onBeforeEventAdd');
         // Отмена заказа
         $em->registerEventHandler('sale', 'OnSaleCancelOrder', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onSaleCancelOrder');
+        // Врезка на страницу профиля (кнопка привязки)
+        $em->registerEventHandler('main', 'OnEpilog', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onEpilog');
 
         // Агент обработки очереди (каждые 5 минут)
         // Очередь можно отключить в настройках, но агент регистрируем,
@@ -110,6 +112,15 @@ class ushakov_telegram extends CModule
             $this->MODULE_ID,
             'N',
             300,
+            '',
+            'Y'
+        );
+        // Агент сверки ролей каждые 15 минут
+        \CAgent::AddAgent(
+            "\\\\Ushakov\\\\Telegram\\\\Agent::reconcileRoles();",
+            $this->MODULE_ID,
+            'N',
+            900,
             '',
             'Y'
         );
@@ -125,8 +136,10 @@ class ushakov_telegram extends CModule
         $em->unRegisterEventHandler('main', 'OnAfterUserAdd', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onUserRegistered');
         $em->unRegisterEventHandler('main', 'OnBeforeEventAdd', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onBeforeEventAdd');
         $em->unRegisterEventHandler('sale', 'OnSaleCancelOrder', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onSaleCancelOrder');
+        $em->unRegisterEventHandler('main', 'OnEpilog', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onEpilog');
 
         \CAgent::RemoveAgent("\\\\Ushakov\\\\Telegram\\\\Agent::process();", $this->MODULE_ID);
+        \CAgent::RemoveAgent("\\\\Ushakov\\\\Telegram\\\\Agent::reconcileRoles();", $this->MODULE_ID);
         return true;
     }
 

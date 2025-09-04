@@ -43,3 +43,12 @@ $MESS["USH_TG_BTN_DELETE_WEBHOOK"] = "Удалить вебхук";
 $MESS["USH_TG_BTN_INFO_WEBHOOK"] = "Проверить статус";
 $MESS["USH_TG_DEEPLINK"] = "Дипссылка для /start (для текущего пользователя)";
 $MESS["USH_TG_DEEPLINK_MANUAL"] = "Или отправьте вручную в Telegram команду";
+
+$MESS["USH_TG_OPT_STAFF_GROUPS"] = "ID групп сотрудников (через запятую)";
+$MESS["USH_TG_SECTION_CUSTOMERS"] = "<b>Уведомления для покупателей</b>";
+$MESS["USH_TG_OPT_CUSTOMER_ENABLED"] = "Включить уведомления покупателям";
+$MESS["USH_TG_OPT_CUSTOMER_ORDER_NEW"] = "Покупателям: новый заказ";
+$MESS["USH_TG_OPT_CUSTOMER_ORDER_STATUS"] = "Покупателям: смена статуса";
+$MESS["USH_TG_OPT_CUSTOMER_ORDER_PAY"] = "Покупателям: оплата заказа";
+$MESS["USH_TG_OPT_CUSTOMER_ORDER_CANCEL"] = "Покупателям: отмена заказа";
+$MESS["USH_TG_OPT_CUSTOMER_ORDER_UNCANCEL"] = "Покупателям: снятие отмены";

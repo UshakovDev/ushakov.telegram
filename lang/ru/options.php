@@ -17,6 +17,7 @@ $MESS["USH_TG_SECTION_EVENTS"] = "<b>Какие события отправля�
 $MESS["USH_TG_OPT_SEND_ORDER_NEW"] = "Новый заказ";
 $MESS["USH_TG_OPT_SEND_ORDER_STATUS"] = "Смена статуса заказа";
 $MESS["USH_TG_OPT_SEND_ORDER_PAY"] = "Оплата заказа";
+$MESS["USH_TG_OPT_SEND_ORDER_CANCELED"] = "Отмена заказа";
 $MESS["USH_TG_OPT_SEND_USER_REGISTERED"] = "Регистрация пользователя";
 $MESS["USH_TG_OPT_SEND_FORM_NEW"] = "Новая заявка (через почтовые события)";
 

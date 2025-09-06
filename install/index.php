@@ -107,8 +107,11 @@ class ushakov_telegram extends CModule
         // Агент обработки очереди (каждые 5 минут)
         // Очередь можно отключить в настройках, но агент регистрируем,
         // пусть сам завершится сразу, если USE_QUEUE=Y не включен.
+        // На всякий случай удалим возможные старые варианты строки агента
+        \CAgent::RemoveAgent("\\\\Ushakov\\\\Telegram\\\\Agent::process();", $this->MODULE_ID);
+        \CAgent::RemoveAgent("\\Ushakov\\Telegram\\Agent::process();", $this->MODULE_ID);
         \CAgent::AddAgent(
-            "\\\\Ushakov\\\\Telegram\\\\Agent::process();",
+            "\\Ushakov\\Telegram\\AgentRunner::process();",
             $this->MODULE_ID,
             'N',
             300,
@@ -116,8 +119,11 @@ class ushakov_telegram extends CModule
             'Y'
         );
         // Агент сверки ролей каждые 15 минут
+        // На всякий случай удалим возможные старые варианты строки агента
+        \CAgent::RemoveAgent("\\\\Ushakov\\\\Telegram\\\\Agent::reconcileRoles();", $this->MODULE_ID);
+        \CAgent::RemoveAgent("\\Ushakov\\Telegram\\Agent::reconcileRoles();", $this->MODULE_ID);
         \CAgent::AddAgent(
-            "\\\\Ushakov\\\\Telegram\\\\Agent::reconcileRoles();",
+            "\\Ushakov\\Telegram\\AgentRunner::reconcileRoles();",
             $this->MODULE_ID,
             'N',
             900,
@@ -138,8 +144,13 @@ class ushakov_telegram extends CModule
         $em->unRegisterEventHandler('sale', 'OnSaleCancelOrder', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onSaleCancelOrder');
         $em->unRegisterEventHandler('main', 'OnEpilog', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onEpilog');
 
-        \CAgent::RemoveAgent("\\\\Ushakov\\\\Telegram\\\\Agent::process();", $this->MODULE_ID);
-        \CAgent::RemoveAgent("\\\\Ushakov\\\\Telegram\\\\Agent::reconcileRoles();", $this->MODULE_ID);
+        // Удаляем как новые, так и старые варианты строк агентов
+        \CAgent::RemoveAgent("\\Ushakov\\Telegram\\Agent::process();", $this->MODULE_ID);
+        \CAgent::RemoveAgent("\\Ushakov\\Telegram\\Agent::reconcileRoles();", $this->MODULE_ID);
+        \CAgent::RemoveAgent("\\\\Ushakov\\\\Telegram\\Agent::process();", $this->MODULE_ID);
+        \CAgent::RemoveAgent("\\\\Ushakov\\\\Telegram\\Agent::reconcileRoles();", $this->MODULE_ID);
+        \CAgent::RemoveAgent("\\Ushakov\\Telegram\\AgentRunner::process();", $this->MODULE_ID);
+        \CAgent::RemoveAgent("\\Ushakov\\Telegram\\AgentRunner::reconcileRoles();", $this->MODULE_ID);
         return true;
     }
 

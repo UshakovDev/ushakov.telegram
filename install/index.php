@@ -95,6 +95,8 @@ class ushakov_telegram extends CModule
         $em->registerEventHandler('sale', 'OnSaleStatusOrderChange', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onOrderStatusChange');
         // Оплата заказа
         $em->registerEventHandler('sale', 'OnSalePayOrder', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onOrderPay');
+        // Совместимое событие оплаты
+        $em->registerEventHandler('sale', 'OnSaleOrderPaid', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onSaleOrderPaid');
         // Регистрация пользователя
         $em->registerEventHandler('main', 'OnAfterUserAdd', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onUserRegistered');
         // Новая заявка (перехват почтовых событий)
@@ -139,6 +141,7 @@ class ushakov_telegram extends CModule
         $em->unRegisterEventHandler('sale', 'OnSaleOrderSaved', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onOrderSaved');
         $em->unRegisterEventHandler('sale', 'OnSaleStatusOrderChange', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onOrderStatusChange');
         $em->unRegisterEventHandler('sale', 'OnSalePayOrder', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onOrderPay');
+        $em->unRegisterEventHandler('sale', 'OnSaleOrderPaid', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onSaleOrderPaid');
         $em->unRegisterEventHandler('main', 'OnAfterUserAdd', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onUserRegistered');
         $em->unRegisterEventHandler('main', 'OnBeforeEventAdd', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onBeforeEventAdd');
         $em->unRegisterEventHandler('sale', 'OnSaleCancelOrder', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onSaleCancelOrder');

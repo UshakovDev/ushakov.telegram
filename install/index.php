@@ -71,17 +71,12 @@ class ushakov_telegram extends CModule
 
     public function InstallDB()
     {
-        // Создайте таблицы через ORM здесь (если нужны).
-        // Пример:
-        // \Ushakov\Telegram\ORM\QueueTable::getEntity()->createDbTable();
+        // Очередь убрана в базовой версии; БД не изменяем
         return true;
     }
 
     public function UnInstallDB($removeData = false)
     {
-        if ($removeData) {
-            // Удалите таблицы/данные, если пользователь выбрал соответствующий чекбокс.
-        }
         return true;
     }
 
@@ -104,20 +99,8 @@ class ushakov_telegram extends CModule
         // Врезка на страницу профиля (кнопка привязки)
         $em->registerEventHandler('main', 'OnEpilog', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onEpilog');
 
-        // Агент обработки очереди (каждые 5 минут)
-        // Очередь можно отключить в настройках, но агент регистрируем,
-        // пусть сам завершится сразу, если USE_QUEUE=Y не включен.
-        // На всякий случай удалим возможные старые варианты строки агента
-        \CAgent::RemoveAgent("\\\\Ushakov\\\\Telegram\\\\Agent::process();", $this->MODULE_ID);
-        \CAgent::RemoveAgent("\\Ushakov\\Telegram\\Agent::process();", $this->MODULE_ID);
-        \CAgent::AddAgent(
-            "\\Ushakov\\Telegram\\AgentRunner::process();",
-            $this->MODULE_ID,
-            'N',
-            300,
-            '',
-            'Y'
-        );
+        // Агент обработки очереди временно не используется
+
         // Агент сверки ролей каждые 15 минут
         // На всякий случай удалим возможные старые варианты строки агента
         \CAgent::RemoveAgent("\\\\Ushakov\\\\Telegram\\\\Agent::reconcileRoles();", $this->MODULE_ID);

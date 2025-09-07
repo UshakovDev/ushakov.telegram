@@ -9,7 +9,6 @@ $MESS["USH_TG_OPT_BOT_TOKEN"] = "Токен бота Telegram";
 $MESS["USH_TG_OPT_BOT_USERNAME"] = "Имя бота (без @)";
 $MESS["USH_TG_OPT_WEBHOOK_PUBLIC_HOST"] = "Публичный хост/домен для вебхука (например, <туннель>.trycloudflare.com)";
 $MESS["USH_TG_OPT_CHAT_IDS"] = "ID получателей (через запятую: 12345, -100987654, @channelname)";
-$MESS["USH_TG_OPT_USE_QUEUE"] = "Использовать очередь (рекомендуется)";
 $MESS["USH_TG_OPT_ENABLE_LOGS"] = "Включить логирование";
 $MESS["USH_TG_OPT_LOG_RETENTION"] = "Срок хранения логов (дней)";
 

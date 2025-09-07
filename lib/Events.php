@@ -179,10 +179,7 @@ class Events
         return Sender::parseChatIds($raw);
     }
 
-    protected static function useQueue(): bool
-    {
-        return Option::get('ushakov.telegram', 'USE_QUEUE', 'Y') === 'Y';
-    }
+    // useQueue() удалён, т.к. очередь не используется в базовой версии
 
     protected static function render(string $tpl, array $vars): string
     {
@@ -201,11 +198,7 @@ class Events
         $chatIds = self::getChatIds();
         if (!trim($text) || !$token || !$chatIds) { return; }
 
-        if (self::useQueue()) {
-            // Queue::push([...]); // внедрите вашу очередь
-        } else {
-            Sender::send($token, $chatIds, $text);
-        }
+        Sender::send($token, $chatIds, $text);
     }
 
     // Новый заказ

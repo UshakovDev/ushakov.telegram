@@ -29,25 +29,8 @@ class Agent
 	{
 		try {
 			self::logSafe('Agent::process tick');
-			$moduleId = 'ushakov.telegram';
-			$useQueue = Option::get($moduleId, 'USE_QUEUE', 'Y') === 'Y';
-			if (!$useQueue) {
-				self::logSafe('Agent::process queue disabled');
-				return "(\\Bitrix\\Main\\Loader::includeModule('ushakov.telegram') ? \\\Ushakov\\Telegram\\Agent::process() : '\\\\\\\\Ushakov\\\\Telegram\\\\Agent::process();')"; // Очередь не используется — просто перезапланируемся
-			}
-
-			// Пример псевдологики (замените на свою QueueTable/Queue класс)
-			// while ($item = Queue::dequeueReady()) {
-			//     try {
-			//         Sender::send($item['token'], $item['chatIds'], $item['text']);
-			//         Queue::markDone($item['id']);
-			//     } catch (\Throwable $e) {
-			//         Queue::markRetry($item['id'], $e->getMessage());
-			//     }
-			// }
-
-			self::logSafe('Agent::process done');
-			return "(\\Bitrix\\Main\\Loader::includeModule('ushakov.telegram') ? \\\Ushakov\\Telegram\\Agent::process() : '\\\\\\\\Ushakov\\\\Telegram\\\\Agent::process();')"; // запускать и дальше
+			// Очередь отключена в базовой версии — просто перепланируемся
+			return "(\\Bitrix\\Main\\Loader::includeModule('ushakov.telegram') ? \\\Ushakov\\Telegram\\Agent::process() : '\\\\\\\\Ushakov\\\\Telegram\\\\Agent::process();')";
 		} catch (\Throwable $e) {
 			self::logSafe('Agent::process error: ' . $e->getMessage());
 			return "(\\Bitrix\\Main\\Loader::includeModule('ushakov.telegram') ? \\\Ushakov\\Telegram\\Agent::process() : '\\\\\\\\Ushakov\\\\Telegram\\\\Agent::process();')";

@@ -71,7 +71,8 @@ class Events
     // Отмена заказа: поддержка сигнатур (event) и (orderId, isCanceled)
     public static function onOrderCanceled($arg1, $arg2 = null): void
     {
-        if (Option::get('ushakov.telegram','SEND_ORDER_CANCELED','Y') !== 'Y') { return; }
+        $adminCancelEnabled   = Option::get('ushakov.telegram','SEND_ORDER_CANCELED','Y') === 'Y';
+        $adminUncancelEnabled = Option::get('ushakov.telegram','SEND_ORDER_UNCANCELED','Y') === 'Y';
 
         $orderId = 0; $isCanceled = false; $reason = '';
         if ($arg1 instanceof \Bitrix\Main\Event) {
@@ -108,7 +109,6 @@ class Events
         }
 
         if ($isCanceled) {
-            if (Option::get('ushakov.telegram','SEND_ORDER_CANCELED','Y') !== 'Y') { return; }
             static $sentCancel = [];
             $dupKey = 'cancel-'.$orderId;
             if (isset($sentCancel[$dupKey])) { return; }
@@ -121,21 +121,21 @@ class Events
                 'PRICE'    => $priceString,
                 'ADMIN_URL'=> self::buildAbsoluteUrl('/bitrix/admin/sale_order_view.php?ID='.(int)$orderId.'&lang='.LANGUAGE_ID),
             ]);
-            self::pushOrSend($text);
+            if ($adminCancelEnabled) { self::sendToAdmins($text, method_exists($order,'getSiteId') ? (string)$order->getSiteId() : null); }
 
             if (Option::get('ushakov.telegram','CUSTOMER_NOTIFY_ENABLED','N') === 'Y'
                 && Option::get('ushakov.telegram','CUSTOMER_EVENTS_ORDER_CANCEL','Y') === 'Y') {
                 if ($order) {
                     $userId = (int)$order->getUserId();
                     if ($userId > 0) {
-                        $chatId = \Ushakov\Telegram\Repository\BindingRepository::getChatId(SITE_ID, $userId);
+                        $siteId = (string)(method_exists($order,'getSiteId') ? $order->getSiteId() : SITE_ID);
+                        $chatId = \Ushakov\Telegram\Repository\BindingRepository::getChatId($siteId, $userId);
                         $token = self::getToken();
                         if ($chatId && $token) { Sender::send($token, [(string)$chatId], $text); }
                     }
                 }
             }
         } else {
-            if (Option::get('ushakov.telegram','SEND_ORDER_UNCANCELED','Y') !== 'Y') { return; }
             static $sentUncancel = [];
             $dupKey2 = 'uncancel-'.$orderId;
             if (isset($sentUncancel[$dupKey2])) { return; }
@@ -147,14 +147,15 @@ class Events
                 'PRICE'    => $priceString,
                 'ADMIN_URL'=> self::buildAbsoluteUrl('/bitrix/admin/sale_order_view.php?ID='.(int)$orderId.'&lang='.LANGUAGE_ID),
             ]);
-            self::pushOrSend($text2);
+            if ($adminUncancelEnabled) { self::sendToAdmins($text2, method_exists($order,'getSiteId') ? (string)$order->getSiteId() : null); }
 
             if (Option::get('ushakov.telegram','CUSTOMER_NOTIFY_ENABLED','N') === 'Y'
                 && Option::get('ushakov.telegram','CUSTOMER_EVENTS_ORDER_UNCANCEL','Y') === 'Y') {
                 if ($order) {
                     $userId = (int)$order->getUserId();
                     if ($userId > 0) {
-                        $chatId = \Ushakov\Telegram\Repository\BindingRepository::getChatId(SITE_ID, $userId);
+                        $siteId = (string)(method_exists($order,'getSiteId') ? $order->getSiteId() : SITE_ID);
+                        $chatId = \Ushakov\Telegram\Repository\BindingRepository::getChatId($siteId, $userId);
                         $token = self::getToken();
                         if ($chatId && $token) { Sender::send($token, [(string)$chatId], $text2); }
                     }
@@ -176,12 +177,62 @@ class Events
     protected static function getChatIds(): array
     {
         $raw = (string) Option::get('ushakov.telegram', 'DEFAULT_CHAT_IDS', '');
-        return Sender::parseChatIds($raw);
+        $ids = Sender::parseChatIds($raw);
+
+        // Fallback: если список пуст, попробуем взять всех сотрудников из привязок
+        if (empty($ids)) {
+            try {
+                $conn = \Bitrix\Main\Application::getConnection();
+                if ($conn && $conn->isTableExists('b_ushakov_tg_bindings')) {
+                    $sqlHelper = $conn->getSqlHelper();
+                    $siteFilter = '';
+                    if (defined('SITE_ID') && SITE_ID !== '') {
+                        $siteFilter = "SITE_ID='".$sqlHelper->forSql((string)SITE_ID)."' AND ";
+                    }
+                    $rows = $conn->query("SELECT DISTINCT CHAT_ID FROM b_ushakov_tg_bindings WHERE ".$siteFilter."IS_STAFF=1 AND CONSENT='Y' AND CHAT_ID IS NOT NULL AND CHAT_ID<>''");
+                    while ($r = $rows->fetch()) {
+                        $ids[] = (string)$r['CHAT_ID'];
+                    }
+                    $ids = array_values(array_unique(array_filter(array_map('trim', $ids))));
+                }
+            } catch (\Throwable $e) {
+                // ignore
+            }
+        }
+        return $ids;
     }
 
     protected static function useQueue(): bool
     {
         return Option::get('ushakov.telegram', 'USE_QUEUE', 'Y') === 'Y';
+    }
+
+    protected static function sendToAdmins(string $text, ?string $siteId = null): void
+    {
+        $token = self::getToken();
+        if (!trim($text) || !$token) { return; }
+
+        $raw = (string) Option::get('ushakov.telegram', 'DEFAULT_CHAT_IDS', '');
+        $ids = Sender::parseChatIds($raw);
+        if (empty($ids)) {
+            try {
+                $conn = \Bitrix\Main\Application::getConnection();
+                if ($conn && $conn->isTableExists('b_ushakov_tg_bindings')) {
+                    $sqlHelper = $conn->getSqlHelper();
+                    $where = "IS_STAFF=1 AND CONSENT='Y' AND CHAT_ID IS NOT NULL AND CHAT_ID<>''";
+                    if ($siteId !== null && $siteId !== '') {
+                        $where = "SITE_ID='".$sqlHelper->forSql($siteId)."' AND ".$where;
+                    }
+                    $rows = $conn->query("SELECT DISTINCT CHAT_ID FROM b_ushakov_tg_bindings WHERE ".$where);
+                    while ($r = $rows->fetch()) { $ids[] = (string)$r['CHAT_ID']; }
+                    $ids = array_values(array_unique(array_filter(array_map('trim', $ids))));
+                }
+            } catch (\Throwable $e) {
+                // ignore
+            }
+        }
+        if (empty($ids)) { return; }
+        Sender::send($token, $ids, $text);
     }
 
     protected static function render(string $tpl, array $vars): string
@@ -213,12 +264,30 @@ class Events
     {
         $entity = $event->getParameter('ENTITY');
         $isNew  = (bool) $event->getParameter('IS_NEW');
-        if (!$isNew || Option::get('ushakov.telegram','SEND_ORDER_NEW','Y') !== 'Y') { return; }
+        if (!$isNew) { return; }
 
         // Дедупликация на случай повторного вызова обработчика в одной транзакции
         static $sentNewKeys = [];
         $dupKey = 'new-'.(int)$entity->getId();
         if (isset($sentNewKeys[$dupKey])) { return; }
+
+        // Кросс-запросная дедупликация на короткое время (5 минут)
+        try {
+            $cache = new \CPHPCache();
+            $cacheTtl = 300; // 5 минут
+            $cacheDir = '/ushakov_tg/new_order';
+            $cacheId = 'order_'.$entity->getId();
+            if ($cache->InitCache($cacheTtl, $cacheId, $cacheDir)) {
+                return; // уже отправляли недавно
+            } else {
+                if ($cache->StartDataCache()) {
+                    $cache->EndDataCache(['t' => time()]);
+                }
+            }
+        } catch (\Throwable $e) {
+            // ignore cache errors
+        }
+
         $sentNewKeys[$dupKey] = true;
 
         // Сбор данных
@@ -267,20 +336,10 @@ class Events
             'PHONE'    => $props['PHONE'] ?? '',
         ]);
 
-        self::pushOrSend($text);
-
-        // Покупателю (если включено)
-        if (Option::get('ushakov.telegram','CUSTOMER_NOTIFY_ENABLED','N') === 'Y'
-            && Option::get('ushakov.telegram','CUSTOMER_EVENTS_ORDER_STATUS','Y') === 'Y') {
-            $order = \Bitrix\Sale\Order::load($orderId);
-            if ($order) {
-                $userId = (int)$order->getUserId();
-                if ($userId > 0) {
-                    $chatId = \Ushakov\Telegram\Repository\BindingRepository::getChatId(SITE_ID, $userId);
-                    $token = self::getToken();
-                    if ($chatId && $token) { Sender::send($token, [(string)$chatId], $text); }
-                }
-            }
+        // Админское уведомление — только если включено SEND_ORDER_NEW
+        if (Option::get('ushakov.telegram','SEND_ORDER_NEW','Y') === 'Y') {
+            $siteId = (string)(method_exists($entity,'getSiteId') ? $entity->getSiteId() : SITE_ID);
+            self::sendToAdmins($text, $siteId);
         }
 
         // Покупателю (если включено)
@@ -288,7 +347,8 @@ class Events
             && Option::get('ushakov.telegram','CUSTOMER_EVENTS_ORDER_NEW','Y') === 'Y') {
             $userId = (int) (method_exists($entity,'getUserId') ? $entity->getUserId() : 0);
             if ($userId > 0) {
-                $chatId = \Ushakov\Telegram\Repository\BindingRepository::getChatId(SITE_ID, $userId);
+                $siteId = (string)(method_exists($entity,'getSiteId') ? $entity->getSiteId() : SITE_ID);
+                $chatId = \Ushakov\Telegram\Repository\BindingRepository::getChatId($siteId, $userId);
                 $token = self::getToken();
                 if ($chatId && $token) { Sender::send($token, [(string)$chatId], $text); }
             }
@@ -305,7 +365,6 @@ class Events
     // Смена статуса: поддержка сигнатур (event) и (orderId, before, after)
     public static function onOrderStatusChange($arg1, $arg2 = null, $arg3 = null): void
     {
-        if (Option::get('ushakov.telegram','SEND_ORDER_STATUS','Y') !== 'Y') { return; }
 
         $orderId = 0; $before = ''; $after = ''; $order = null;
         if ($arg1 instanceof \Bitrix\Main\Event) {
@@ -370,7 +429,27 @@ class Events
             'ADMIN_URL'=> self::buildAbsoluteUrl('/bitrix/admin/sale_order_view.php?ID='.(int)$orderId.'&lang='.LANGUAGE_ID),
             'PRICE'    => $priceString,
         ]);
-        self::pushOrSend($text);
+        // Админ-уведомление — только если включено
+        if (Option::get('ushakov.telegram','SEND_ORDER_STATUS','Y') === 'Y') {
+            $siteId = null;
+            if ($order instanceof \Bitrix\Sale\Order && method_exists($order,'getSiteId')) { $siteId = (string)$order->getSiteId(); }
+            self::sendToAdmins($text, $siteId);
+        }
+
+        // Покупателю (если включено)
+        if (Option::get('ushakov.telegram','CUSTOMER_NOTIFY_ENABLED','N') === 'Y'
+            && Option::get('ushakov.telegram','CUSTOMER_EVENTS_ORDER_STATUS','Y') === 'Y') {
+            $order = \Bitrix\Sale\Order::load($orderId);
+            if ($order) {
+                $userId = (int)$order->getUserId();
+                if ($userId > 0) {
+                    $siteId = (string)(method_exists($order,'getSiteId') ? $order->getSiteId() : SITE_ID);
+                    $chatId = \Ushakov\Telegram\Repository\BindingRepository::getChatId($siteId, $userId);
+                    $token = self::getToken();
+                    if ($chatId && $token) { Sender::send($token, [(string)$chatId], $text); }
+                }
+            }
+        }
     }
 
     // Совместимость: ожидают метод onSaleStatusChange
@@ -397,7 +476,7 @@ class Events
     // Оплата заказа: поддержка сигнатур (event) и (orderId, isPaid)
     public static function onOrderPay($arg1, $arg2 = null): void
     {
-        if (Option::get('ushakov.telegram','SEND_ORDER_PAY','Y') !== 'Y') { return; }
+        $adminPayEnabled = Option::get('ushakov.telegram','SEND_ORDER_PAY','Y') === 'Y';
 
         $orderId = 0; $isPaid = false; $paymentName = '';
         if ($arg1 instanceof \Bitrix\Main\Event) {
@@ -476,7 +555,22 @@ class Events
             'PAYMENT'  => $paymentName,
             'ADMIN_URL'=> self::buildAbsoluteUrl('/bitrix/admin/sale_order_view.php?ID='.(int)$order->getId().'&lang='.LANGUAGE_ID),
         ]);
-        self::pushOrSend($text);
+        if ($adminPayEnabled) {
+            $siteId = (string)(method_exists($order,'getSiteId') ? $order->getSiteId() : SITE_ID);
+            self::sendToAdmins($text, $siteId);
+        }
+
+        // Покупателю (если включено)
+        if (Option::get('ushakov.telegram','CUSTOMER_NOTIFY_ENABLED','N') === 'Y'
+            && Option::get('ushakov.telegram','CUSTOMER_EVENTS_ORDER_PAY','Y') === 'Y') {
+            $userId = (int)$order->getUserId();
+            if ($userId > 0) {
+                $siteId = (string)(method_exists($order,'getSiteId') ? $order->getSiteId() : SITE_ID);
+                $chatId = \Ushakov\Telegram\Repository\BindingRepository::getChatId($siteId, $userId);
+                $token = self::getToken();
+                if ($chatId && $token) { Sender::send($token, [(string)$chatId], $text); }
+            }
+        }
     }
 
     // Совместимость: некоторые окружения используют событие OnSaleOrderPaid
@@ -489,6 +583,7 @@ class Events
     // Регистрация пользователя
     public static function onUserRegistered($fields): void
     {
+        // Админское уведомление о регистрации — по флагу
         if (Option::get('ushakov.telegram','SEND_USER_REGISTERED','N') !== 'Y') { return; }
         $tpl = Option::get('ushakov.telegram','TPL_USER_REGISTERED', Loc::getMessage('USH_TG_TPL_USER_REGISTERED_DEF'));
         $text = self::render($tpl, [

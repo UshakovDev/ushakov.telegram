@@ -202,11 +202,6 @@ class Events
         return $ids;
     }
 
-    protected static function useQueue(): bool
-    {
-        return Option::get('ushakov.telegram', 'USE_QUEUE', 'Y') === 'Y';
-    }
-
     protected static function sendToAdmins(string $text, ?string $siteId = null): void
     {
         $token = self::getToken();
@@ -252,11 +247,7 @@ class Events
         $chatIds = self::getChatIds();
         if (!trim($text) || !$token || !$chatIds) { return; }
 
-        if (self::useQueue()) {
-            // Queue::push([...]); // внедрите вашу очередь
-        } else {
-            Sender::send($token, $chatIds, $text);
-        }
+        Sender::send($token, $chatIds, $text);
     }
 
     // Новый заказ

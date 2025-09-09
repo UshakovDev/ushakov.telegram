@@ -57,7 +57,6 @@ $aTabs = [
             ["WEBHOOK_PUBLIC_HOST", Loc::getMessage("USH_TG_OPT_WEBHOOK_PUBLIC_HOST"), "", ["text", 60]],
             ["DEFAULT_CHAT_IDS", Loc::getMessage("USH_TG_OPT_CHAT_IDS"), "", ["text", 50]],
             ["STAFF_GROUP_IDS", Loc::getMessage("USH_TG_OPT_STAFF_GROUPS"), "1", ["text", 30]],
-            ["USE_QUEUE", Loc::getMessage("USH_TG_OPT_USE_QUEUE"), "Y", ["checkbox"]],
             ["ENABLE_LOGS", Loc::getMessage("USH_TG_OPT_ENABLE_LOGS"), "Y", ["checkbox"]],
             ["LOG_RETENTION_DAYS", Loc::getMessage("USH_TG_OPT_LOG_RETENTION"), "14", ["text", 5]],
 

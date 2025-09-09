@@ -9,8 +9,7 @@ $MESS["USH_TG_OPT_BOT_TOKEN"] = "Токен бота Telegram";
 $MESS["USH_TG_OPT_BOT_USERNAME"] = "Имя бота (без @)";
 $MESS["USH_TG_OPT_WEBHOOK_PUBLIC_HOST"] = "Публичный хост/домен для вебхука (например, <туннель>.trycloudflare.com)";
 $MESS["USH_TG_OPT_CHAT_IDS"] = "Дополнительные получатели (чат‑ID/каналы, через запятую)";
-$MESS["USH_TG_OPT_ENABLE_LOGS"] = "Включить логирование";
-$MESS["USH_TG_OPT_LOG_RETENTION"] = "Срок хранения логов (дней)";
+ 
 
 $MESS["USH_TG_SECTION_EVENTS"] = "<b>Какие события отправлять сотрудникам</b>";
 $MESS["USH_TG_OPT_SEND_ORDER_NEW"] = "Новый заказ";

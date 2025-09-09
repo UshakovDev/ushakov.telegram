@@ -83,11 +83,15 @@ if ($chatId <= 0) {
 // 1) "/start <payload>" (с пробелом)
 // 2) "/start<payload>" (без пробела)
 // 3) просто "<payload>" отдельным сообщением
-if (mb_stripos($text, '/start') === 0 || preg_match('~^[a-zA-Z]{2}-\d+-[a-f0-9]{32,}+$~', trim($text))) {
+if (mb_stripos($text, '/start') === 0 || mb_stripos($text, '/link') === 0 || preg_match('~^[a-zA-Z]{2}-\d+-[a-f0-9]{32,}+$~', trim($text))) {
     $payload = '';
     if (mb_stripos($text, '/start') === 0) {
         // поддержка "/start <p>", "/start=<p>", "/start<p>"
         if (preg_match('~^/start(?:\s+|=)?(.+)$~ui', $text, $m)) {
+            $payload = trim($m[1]);
+        }
+    } elseif (mb_stripos($text, '/link') === 0) {
+        if (preg_match('~^/link(?:\s+|=)?(.+)$~ui', $text, $m)) {
             $payload = trim($m[1]);
         }
     } else {

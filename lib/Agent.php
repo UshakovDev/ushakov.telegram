@@ -16,10 +16,10 @@ class Agent
 	{
 		try {
 			self::logSafe('Agent::process tick');
-			return "(\\Bitrix\\Main\\Loader::includeModule('ushakov.telegram') ? \\\Ushakov\\Telegram\\Agent::process() : '\\\\\\\\Ushakov\\Telegram\\Agent::process();')";
+			return "\\Ushakov\\Telegram\\Agent::process();";
 		} catch (\Throwable $e) {
 			self::logSafe('Agent::process error: ' . $e->getMessage());
-			return "(\\Bitrix\\Main\\Loader::includeModule('ushakov.telegram') ? \\\Ushakov\\Telegram\\Agent::process() : '\\\\\\\\Ushakov\\Telegram\\Agent::process();')";
+			return "\\Ushakov\\Telegram\\Agent::process();";
 		}
 	}
 
@@ -35,7 +35,7 @@ class Agent
 			$staffGroupIds = array_filter(array_map('intval', array_map('trim', explode(',', $groupsOpt))));
 			if (empty($staffGroupIds)) {
 				self::logSafe('Agent::reconcileRoles no staff groups');
-				return "(\\Bitrix\\Main\\Loader::includeModule('ushakov.telegram') ? \\\Ushakov\\Telegram\\Agent::reconcileRoles() : '\\\\\\\\Ushakov\\Telegram\\Agent::reconcileRoles();')";
+				return "\\Ushakov\\Telegram\\Agent::reconcileRoles();";
 			}
 
 			$conn = Application::getConnection();
@@ -43,7 +43,7 @@ class Agent
 			$table = 'b_ushakov_tg_bindings';
 			if (!$conn->isTableExists($table)) {
 				self::logSafe('Agent::reconcileRoles no table');
-				return "(\\Bitrix\\Main\\Loader::includeModule('ushakov.telegram') ? \\\Ushakov\\Telegram\\Agent::reconcileRoles() : '\\\\\\\\Ushakov\\Telegram\\Agent::reconcileRoles();')";
+				return "\\Ushakov\\Telegram\\Agent::reconcileRoles();";
 			}
 
 			$rows = $conn->query("SELECT ID, SITE_ID, USER_ID FROM {$table}");
@@ -59,10 +59,10 @@ class Agent
 			}
 
 			self::logSafe('Agent::reconcileRoles done');
-			return "(\\Bitrix\\Main\\Loader::includeModule('ushakov.telegram') ? \\\Ushakov\\Telegram\\Agent::reconcileRoles() : '\\\\\\\\Ushakov\\Telegram\\Agent::reconcileRoles();')";
+			return "\\Ushakov\\Telegram\\Agent::reconcileRoles();";
 		} catch (\Throwable $e) {
 			self::logSafe('Agent::reconcileRoles error: ' . $e->getMessage());
-			return "(\\Bitrix\\Main\\Loader::includeModule('ushakov.telegram') ? \\\Ushakov\\Telegram\\Agent::reconcileRoles() : '\\\\\\\\Ushakov\\Telegram\\Agent::reconcileRoles();')";
+			return "\\Ushakov\\Telegram\\Agent::reconcileRoles();";
 		}
 	}
 }

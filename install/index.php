@@ -107,12 +107,13 @@ class ushakov_telegram extends CModule
         $em->registerEventHandler('main', 'OnEpilog', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onEpilog');
 
         // Очередь не используется в этой версии
-        // Агент сверки ролей каждые 15 минут
+        // Агент сверки ролей каждые 15 минут (простая строка вызова)
         // На всякий случай удалим возможные старые варианты строки агента
-        \CAgent::RemoveAgent("\\\\Ushakov\\\\Telegram\\\\Agent::reconcileRoles();", $this->MODULE_ID);
+        \CAgent::RemoveAgent("\\\\Ushakov\\Telegram\\Agent::reconcileRoles();", $this->MODULE_ID);
         \CAgent::RemoveAgent("\\Ushakov\\Telegram\\Agent::reconcileRoles();", $this->MODULE_ID);
+        \CAgent::RemoveAgent("\\Ushakov\\Telegram\\AgentRunner::reconcileRoles();", $this->MODULE_ID);
         \CAgent::AddAgent(
-            "\\Ushakov\\Telegram\\AgentRunner::reconcileRoles();",
+            "\\Ushakov\\Telegram\\Agent::reconcileRoles();",
             $this->MODULE_ID,
             'N',
             900,

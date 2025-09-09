@@ -106,20 +106,7 @@ class ushakov_telegram extends CModule
         // Врезка на страницу профиля (кнопка привязки)
         $em->registerEventHandler('main', 'OnEpilog', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onEpilog');
 
-        // Агент обработки очереди (каждые 5 минут)
-        // Очередь можно отключить в настройках, но агент регистрируем,
-        // пусть сам завершится сразу, если USE_QUEUE=Y не включен.
-        // На всякий случай удалим возможные старые варианты строки агента
-        \CAgent::RemoveAgent("\\\\Ushakov\\\\Telegram\\\\Agent::process();", $this->MODULE_ID);
-        \CAgent::RemoveAgent("\\Ushakov\\Telegram\\Agent::process();", $this->MODULE_ID);
-        \CAgent::AddAgent(
-            "\\Ushakov\\Telegram\\AgentRunner::process();",
-            $this->MODULE_ID,
-            'N',
-            300,
-            '',
-            'Y'
-        );
+        // Очередь не используется в этой версии
         // Агент сверки ролей каждые 15 минут
         // На всякий случай удалим возможные старые варианты строки агента
         \CAgent::RemoveAgent("\\\\Ushakov\\\\Telegram\\\\Agent::reconcileRoles();", $this->MODULE_ID);
@@ -148,11 +135,8 @@ class ushakov_telegram extends CModule
         $em->unRegisterEventHandler('main', 'OnEpilog', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onEpilog');
 
         // Удаляем как новые, так и старые варианты строк агентов
-        \CAgent::RemoveAgent("\\Ushakov\\Telegram\\Agent::process();", $this->MODULE_ID);
         \CAgent::RemoveAgent("\\Ushakov\\Telegram\\Agent::reconcileRoles();", $this->MODULE_ID);
-        \CAgent::RemoveAgent("\\\\Ushakov\\\\Telegram\\Agent::process();", $this->MODULE_ID);
-        \CAgent::RemoveAgent("\\\\Ushakov\\\\Telegram\\Agent::reconcileRoles();", $this->MODULE_ID);
-        \CAgent::RemoveAgent("\\Ushakov\\Telegram\\AgentRunner::process();", $this->MODULE_ID);
+        \CAgent::RemoveAgent("\\\\Ushakov\\Telegram\\Agent::reconcileRoles();", $this->MODULE_ID);
         \CAgent::RemoveAgent("\\Ushakov\\Telegram\\AgentRunner::reconcileRoles();", $this->MODULE_ID);
         return true;
     }

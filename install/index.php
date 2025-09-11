@@ -103,7 +103,6 @@ class ushakov_telegram extends CModule
         $em->registerEventHandler('main', 'OnBeforeEventAdd', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onBeforeEventAdd');
         // Отмена заказа
         $em->registerEventHandler('sale', 'OnSaleCancelOrder', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onSaleCancelOrder');
-
         // Врезка на страницу профиля (кнопка привязки)
         $em->registerEventHandler('main', 'OnEpilog', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onEpilog');
 

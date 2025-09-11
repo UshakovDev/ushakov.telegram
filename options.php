@@ -121,12 +121,39 @@ $tabControl->Begin();
                 \Bitrix\Main\UI\Extension::load("ui.hint");
                 ?>
                 <script>
-                    BX.ready(function(){ BX.UI.Hint.init(document.body); });
+                    BX.ready(function(){
+                        BX.UI.Hint.init(document.body);
+                        var hints = {
+                            BOT_TOKEN: '<?=CUtil::JSEscape(Loc::getMessage('USH_TG_HINT_BOT_TOKEN'))?>',
+                            BOT_USERNAME: '<?=CUtil::JSEscape(Loc::getMessage('USH_TG_HINT_BOT_USERNAME'))?>',
+                            WEBHOOK_PUBLIC_HOST: '<?=CUtil::JSEscape(Loc::getMessage('USH_TG_HINT_PUBLIC_HOST'))?>',
+                            DEFAULT_CHAT_IDS: '<?=CUtil::JSEscape(Loc::getMessage('USH_TG_HINT_CHAT_IDS'))?>',
+                            STAFF_GROUP_IDS: '<?=CUtil::JSEscape(Loc::getMessage('USH_TG_HINT_STAFF_GROUPS'))?>'
+                        };
+                        Object.keys(hints).forEach(function(name){
+                            var input = document.querySelector('[name="'+name+'"]');
+                            if (!input) return;
+                            var row = input.closest('tr');
+                            if (!row) return;
+                            var label = row.querySelector('td.adm-detail-content-cell-l');
+                            if (!label) return;
+                            var icon = document.createElement('span');
+                            icon.className = 'ui-hint';
+                            icon.setAttribute('data-hint', hints[name]);
+                            icon.style.marginLeft = '6px';
+                            label.appendChild(icon);
+                        });
+                        BX.UI.Hint.init(document.body);
+                    });
                 </script>
-                <div class="adm-info-message" data-hint="<?=Loc::getMessage('USH_TG_HINT_CHAT_IDS')?>">
-                    <?=Loc::getMessage('USH_TG_HINT_BLOCK_TITLE')?>
-                </div>
                 <div class="adm-info-message-wrap" style="margin-top: 12px;">
+                    <div class="adm-info-message">
+                        <b><?=Loc::getMessage('USH_TG_HELP_BOT_TITLE')?></b><br/>
+                        <div style="margin-top:6px; line-height:1.5;">
+                            <?=Loc::getMessage('USH_TG_HELP_BOT_TEXT')?>
+                        </div>
+                    </div>
+                    
                     <div class="adm-info-message">
                         <b><?=Loc::getMessage('USH_TG_WEBHOOK_STATUS')?></b><br/>
                         <?php

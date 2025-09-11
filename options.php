@@ -168,6 +168,12 @@ $tabControl->Begin();
                             <?=Loc::getMessage('USH_TG_HELP_BOT_TEXT')?>
                         </div>
                     </div>
+                    <div class="adm-info-message" style="margin-top: 8px;">
+                        <b><?=Loc::getMessage('USH_TG_HELP_WEBHOOK_TITLE')?></b><br/>
+                        <div style="margin-top:6px; line-height:1.5;">
+                            <?=Loc::getMessage('USH_TG_HELP_WEBHOOK_TEXT')?>
+                        </div>
+                    </div>
                     
                     <div class="adm-info-message">
                         <b><?=Loc::getMessage('USH_TG_WEBHOOK_STATUS')?></b><br/>

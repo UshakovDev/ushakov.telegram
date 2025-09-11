@@ -130,6 +130,21 @@ $tabControl->Begin();
                             DEFAULT_CHAT_IDS: '<?=CUtil::JSEscape(Loc::getMessage('USH_TG_HINT_CHAT_IDS'))?>',
                             STAFF_GROUP_IDS: '<?=CUtil::JSEscape(Loc::getMessage('USH_TG_HINT_STAFF_GROUPS'))?>'
                         };
+                        // Добавим общую подсказку к заголовку блока шаблонов
+                        var templatesTitle = '<?=CUtil::JSEscape(strip_tags(Loc::getMessage('USH_TG_SECTION_TEMPLATES')))?>';
+                        var headers = document.querySelectorAll('tr.heading td, tr td.adm-detail-content-cell-l');
+                        var templatesHeader = Array.prototype.find.call(headers, function(td){
+                            var t = (td.innerText || td.textContent || '').trim();
+                            return t.indexOf(templatesTitle) !== -1;
+                        });
+                        if (templatesHeader) {
+                            var iconT = document.createElement('span');
+                            iconT.className = 'ui-hint';
+                            iconT.setAttribute('data-hint', '<?=CUtil::JSEscape(Loc::getMessage('USH_TG_HINT_TEMPLATES'))?>');
+                            iconT.style.marginLeft = '6px';
+                            templatesHeader.appendChild(iconT);
+                        }
+
                         Object.keys(hints).forEach(function(name){
                             var input = document.querySelector('[name="'+name+'"]');
                             if (!input) return;
@@ -174,11 +189,17 @@ $tabControl->Begin();
                             }
                         }
                         ?>
+                        <style>
+                            .ush-tg-btn { cursor: pointer; transition: transform .02s ease, filter .1s ease; }
+                            .ush-tg-btn:hover { filter: brightness(1.05); }
+                            .ush-tg-btn:active { transform: translateY(1px); filter: brightness(0.95); }
+                            .ush-tg-btn:disabled { cursor: default; opacity: .6; filter: none; transform: none; }
+                        </style>
                         <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
                             <input type="hidden" name="ACTION" id="tg-action" value="">
-                            <button type="submit" class="adm-btn-save" onclick="document.getElementById('tg-action').value='SET_WEBHOOK'"><?=Loc::getMessage('USH_TG_BTN_SET_WEBHOOK')?></button>
-                            <button type="submit" class="adm-btn" onclick="document.getElementById('tg-action').value='DELETE_WEBHOOK'"><?=Loc::getMessage('USH_TG_BTN_DELETE_WEBHOOK')?></button>
-                            <button type="submit" class="adm-btn" onclick="document.getElementById('tg-action').value='INFO_WEBHOOK'"><?=Loc::getMessage('USH_TG_BTN_INFO_WEBHOOK')?></button>
+                            <button type="submit" class="adm-btn-save ush-tg-btn" onclick="document.getElementById('tg-action').value='SET_WEBHOOK'"><?=Loc::getMessage('USH_TG_BTN_SET_WEBHOOK')?></button>
+                            <button type="submit" class="adm-btn ush-tg-btn" onclick="document.getElementById('tg-action').value='DELETE_WEBHOOK'"><?=Loc::getMessage('USH_TG_BTN_DELETE_WEBHOOK')?></button>
+                            <button type="submit" class="adm-btn ush-tg-btn" onclick="document.getElementById('tg-action').value='INFO_WEBHOOK'"><?=Loc::getMessage('USH_TG_BTN_INFO_WEBHOOK')?></button>
                         </div>
                         <?php
                         $botUsername = trim((string) Option::get($module_id, 'BOT_USERNAME', ''));

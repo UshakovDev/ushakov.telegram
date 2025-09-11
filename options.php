@@ -43,6 +43,22 @@ if ($request->isPost() && check_bitrix_sessid()) {
     } elseif ($action === 'INFO_WEBHOOK') {
         $r = \Ushakov\Telegram\Service\WebhookRegistrar::getWebhookInfo();
         echo '<pre style="max-height:300px;overflow:auto">'.htmlspecialcharsbx(print_r($r['response'], true)).'</pre>';
+    } elseif ($action === 'APPLY_HTML_TEMPLATES') {
+        // Применить HTML-дефолты шаблонов в опции модуля
+        $map = [
+            'TPL_ORDER_NEW'        => 'USH_TG_TPL_ORDER_NEW_DEF',
+            'TPL_ORDER_STATUS'     => 'USH_TG_TPL_ORDER_STATUS_DEF',
+            'TPL_ORDER_PAY'        => 'USH_TG_TPL_ORDER_PAY_DEF',
+            'TPL_ORDER_CANCELED'   => 'USH_TG_TPL_ORDER_CANCELED_DEF',
+            'TPL_ORDER_UNCANCELED' => 'USH_TG_TPL_ORDER_UNCANCELED_DEF',
+            'TPL_USER_REGISTERED'  => 'USH_TG_TPL_USER_REGISTERED_DEF',
+            'TPL_FORM_NEW'         => 'USH_TG_TPL_FORM_NEW_DEF',
+        ];
+        foreach ($map as $opt => $langKey) {
+            $def = (string) Loc::getMessage($langKey);
+            if ($def !== '') { Option::set($module_id, $opt, $def); }
+        }
+        echo BeginNote().Loc::getMessage('USH_TG_NOTE_TEMPLATES_APPLIED').EndNote();
     }
 }
 
@@ -210,6 +226,7 @@ $tabControl->Begin();
                             <button type="submit" class="adm-btn-save ush-tg-btn" onclick="document.getElementById('tg-action').value='SET_WEBHOOK'"><?=Loc::getMessage('USH_TG_BTN_SET_WEBHOOK')?></button>
                             <button type="submit" class="adm-btn ush-tg-btn" onclick="document.getElementById('tg-action').value='DELETE_WEBHOOK'"><?=Loc::getMessage('USH_TG_BTN_DELETE_WEBHOOK')?></button>
                             <button type="submit" class="adm-btn ush-tg-btn" onclick="document.getElementById('tg-action').value='INFO_WEBHOOK'"><?=Loc::getMessage('USH_TG_BTN_INFO_WEBHOOK')?></button>
+                            <button type="submit" class="adm-btn ush-tg-btn" title="<?=CUtil::JSEscape(Loc::getMessage('USH_TG_BTN_APPLY_HTML_TEMPLATES_HINT'))?>" onclick="document.getElementById('tg-action').value='APPLY_HTML_TEMPLATES'"><?=Loc::getMessage('USH_TG_BTN_APPLY_HTML_TEMPLATES')?></button>
                         </div>
                         <?php
                         $botUsername = trim((string) Option::get($module_id, 'BOT_USERNAME', ''));

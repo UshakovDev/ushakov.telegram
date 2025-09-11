@@ -115,13 +115,20 @@ class Events
             $sentCancel[$dupKey] = true;
 
             $tpl = Option::get('ushakov.telegram','TPL_ORDER_CANCELED', '❌ Заказ #ORDER_ID# отменён\nПричина: #REASON#\nСумма: #PRICE#\nСсылка: #ADMIN_URL#');
-            $text = self::render($tpl, [
-                'ORDER_ID' => $orderId,
-                'REASON'   => $reason,
-                'PRICE'    => $priceString,
-                'ADMIN_URL'=> self::buildAbsoluteUrl('/bitrix/admin/sale_order_view.php?ID='.(int)$orderId.'&lang='.LANGUAGE_ID),
-            ]);
-            if ($adminCancelEnabled) { self::sendToAdmins($text, method_exists($order,'getSiteId') ? (string)$order->getSiteId() : null); }
+            $adminUrl = self::buildAbsoluteUrl('/bitrix/admin/sale_order_view.php?ID='.(int)$orderId.'&lang='.LANGUAGE_ID);
+            $userUrl  = self::buildAbsoluteUrl('/personal/orders/');
+            // Админам — по их шаблону (если используется #URL#, подменим на #ADMIN_URL#)
+            if ($adminCancelEnabled) {
+                $tplAdmin = str_replace('#URL#', '#ADMIN_URL#', $tpl);
+                $textAdmin = self::render($tplAdmin, [
+                    'ORDER_ID' => $orderId,
+                    'REASON'   => $reason,
+                    'PRICE'    => $priceString,
+                    'ADMIN_URL'=> $adminUrl,
+                    'URL'      => $userUrl,
+                ]);
+                self::sendToAdmins($textAdmin, method_exists($order,'getSiteId') ? (string)$order->getSiteId() : null);
+            }
 
             if (Option::get('ushakov.telegram','CUSTOMER_NOTIFY_ENABLED','N') === 'Y'
                 && Option::get('ushakov.telegram','CUSTOMER_EVENTS_ORDER_CANCEL','Y') === 'Y') {
@@ -131,7 +138,18 @@ class Events
                         $siteId = (string)(method_exists($order,'getSiteId') ? $order->getSiteId() : SITE_ID);
                         $chatId = \Ushakov\Telegram\Repository\BindingRepository::getChatId($siteId, $userId);
                         $token = self::getToken();
-                        if ($chatId && $token) { Sender::send($token, [(string)$chatId], $text); }
+                        if ($chatId && $token) {
+                            // Покупателям — принудительно на #URL# (личные заказы)
+                            $tplCustomer = str_replace('#ADMIN_URL#', '#URL#', $tpl);
+                            $textCustomer = self::render($tplCustomer, [
+                                'ORDER_ID' => $orderId,
+                                'REASON'   => $reason,
+                                'PRICE'    => $priceString,
+                                'ADMIN_URL'=> $adminUrl,
+                                'URL'      => $userUrl,
+                            ]);
+                            Sender::send($token, [(string)$chatId], $textCustomer);
+                        }
                     }
                 }
             }
@@ -142,12 +160,18 @@ class Events
             $sentUncancel[$dupKey2] = true;
 
             $tpl2 = Option::get('ushakov.telegram','TPL_ORDER_UNCANCELED', "♻️ Отмена заказа #ORDER_ID# снята\nСумма: #PRICE#\nСсылка: #ADMIN_URL#");
-            $text2 = self::render($tpl2, [
-                'ORDER_ID' => $orderId,
-                'PRICE'    => $priceString,
-                'ADMIN_URL'=> self::buildAbsoluteUrl('/bitrix/admin/sale_order_view.php?ID='.(int)$orderId.'&lang='.LANGUAGE_ID),
-            ]);
-            if ($adminUncancelEnabled) { self::sendToAdmins($text2, method_exists($order,'getSiteId') ? (string)$order->getSiteId() : null); }
+            $adminUrl2 = self::buildAbsoluteUrl('/bitrix/admin/sale_order_view.php?ID='.(int)$orderId.'&lang='.LANGUAGE_ID);
+            $userUrl2  = self::buildAbsoluteUrl('/personal/orders/');
+            if ($adminUncancelEnabled) {
+                $tplAdmin2 = str_replace('#URL#', '#ADMIN_URL#', $tpl2);
+                $textAdmin2 = self::render($tplAdmin2, [
+                    'ORDER_ID' => $orderId,
+                    'PRICE'    => $priceString,
+                    'ADMIN_URL'=> $adminUrl2,
+                    'URL'      => $userUrl2,
+                ]);
+                self::sendToAdmins($textAdmin2, method_exists($order,'getSiteId') ? (string)$order->getSiteId() : null);
+            }
 
             if (Option::get('ushakov.telegram','CUSTOMER_NOTIFY_ENABLED','N') === 'Y'
                 && Option::get('ushakov.telegram','CUSTOMER_EVENTS_ORDER_UNCANCEL','Y') === 'Y') {
@@ -157,7 +181,16 @@ class Events
                         $siteId = (string)(method_exists($order,'getSiteId') ? $order->getSiteId() : SITE_ID);
                         $chatId = \Ushakov\Telegram\Repository\BindingRepository::getChatId($siteId, $userId);
                         $token = self::getToken();
-                        if ($chatId && $token) { Sender::send($token, [(string)$chatId], $text2); }
+                        if ($chatId && $token) {
+                            $tplCustomer2 = str_replace('#ADMIN_URL#', '#URL#', $tpl2);
+                            $textCustomer2 = self::render($tplCustomer2, [
+                                'ORDER_ID' => $orderId,
+                                'PRICE'    => $priceString,
+                                'ADMIN_URL'=> $adminUrl2,
+                                'URL'      => $userUrl2,
+                            ]);
+                            Sender::send($token, [(string)$chatId], $textCustomer2);
+                        }
                     }
                 }
             }
@@ -236,7 +269,8 @@ class Events
         $replace = [];
         foreach ($vars as $k => $v) {
             $search[] = '#' . $k . '#';
-            $replace[] = (string)$v;
+            // HTML parse_mode: экранируем переменные, чтобы избежать слома разметки и инъекций
+            $replace[] = htmlspecialcharsbx((string)$v);
         }
         return str_replace($search, $replace, $tpl);
     }
@@ -302,7 +336,7 @@ class Events
         $basketText = '';
         if ($basket = $entity->getBasket()) {
             foreach ($basket->getBasketItems() as $item) {
-                $basketText .= htmlspecialcharsbx($item->getField('NAME')) . ' x ' . (float)$item->getQuantity() . "\n";
+                $basketText .= (string)$item->getField('NAME') . ' x ' . (float)$item->getQuantity() . "\n";
             }
         }
 

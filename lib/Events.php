@@ -247,7 +247,7 @@ class Events
         $chatIds = self::getChatIds();
         if (!trim($text) || !$token || !$chatIds) { return; }
 
-        Sender::send($token, $chatIds, $text);
+            Sender::send($token, $chatIds, $text);
     }
 
     // Новый заказ
@@ -321,6 +321,7 @@ class Events
             'DELIVERY' => $delivery,
             'PAYMENT'  => $paymentName,
             'ADMIN_URL'=> $adminUrl,
+            'URL'      => self::buildAbsoluteUrl('/personal/orders/'),
             'BASKET'   => $basketText,
             'FIO'      => $props['FIO'] ?? ($props['CONTACT_NAME'] ?? ''),
             'EMAIL'    => $props['EMAIL'] ?? '',
@@ -330,7 +331,21 @@ class Events
         // Админское уведомление — только если включено SEND_ORDER_NEW
         if (Option::get('ushakov.telegram','SEND_ORDER_NEW','Y') === 'Y') {
             $siteId = (string)(method_exists($entity,'getSiteId') ? $entity->getSiteId() : SITE_ID);
-            self::sendToAdmins($text, $siteId);
+            // Если в шаблоне используется #URL#, подменим его на #ADMIN_URL# для сотрудников
+            $tplAdmin = str_replace('#URL#', '#ADMIN_URL#', $tpl);
+            $adminText = self::render($tplAdmin, [
+                'ORDER_ID' => $orderId,
+                'PRICE'    => $price . ' ' . $currency,
+                'DELIVERY' => $delivery,
+                'PAYMENT'  => $paymentName,
+                'ADMIN_URL'=> $adminUrl,
+                'URL'      => self::buildAbsoluteUrl('/personal/orders/'),
+                'BASKET'   => $basketText,
+                'FIO'      => $props['FIO'] ?? ($props['CONTACT_NAME'] ?? ''),
+                'EMAIL'    => $props['EMAIL'] ?? '',
+                'PHONE'    => $props['PHONE'] ?? '',
+            ]);
+            self::sendToAdmins($adminText, $siteId);
         }
 
         // Покупателю (если включено)
@@ -341,7 +356,23 @@ class Events
                 $siteId = (string)(method_exists($entity,'getSiteId') ? $entity->getSiteId() : SITE_ID);
                 $chatId = \Ushakov\Telegram\Repository\BindingRepository::getChatId($siteId, $userId);
                 $token = self::getToken();
-                if ($chatId && $token) { Sender::send($token, [(string)$chatId], $text); }
+                if ($chatId && $token) {
+                    // Для покупателей принудительно используем #URL# вместо #ADMIN_URL#
+                    $tplCustomer = str_replace('#ADMIN_URL#', '#URL#', $tpl);
+                    $customerText = self::render($tplCustomer, [
+                        'ORDER_ID' => $orderId,
+                        'PRICE'    => $price . ' ' . $currency,
+                        'DELIVERY' => $delivery,
+                        'PAYMENT'  => $paymentName,
+                        'ADMIN_URL'=> $adminUrl,
+                        'URL'      => self::buildAbsoluteUrl('/personal/orders/'),
+                        'BASKET'   => $basketText,
+                        'FIO'      => $props['FIO'] ?? ($props['CONTACT_NAME'] ?? ''),
+                        'EMAIL'    => $props['EMAIL'] ?? '',
+                        'PHONE'    => $props['PHONE'] ?? '',
+                    ]);
+                    Sender::send($token, [(string)$chatId], $customerText);
+                }
             }
         }
     }
@@ -418,13 +449,22 @@ class Events
             'ORDER_ID' => $orderId,
             'STATUS'   => $statusName,
             'ADMIN_URL'=> self::buildAbsoluteUrl('/bitrix/admin/sale_order_view.php?ID='.(int)$orderId.'&lang='.LANGUAGE_ID),
+            'URL'      => self::buildAbsoluteUrl('/personal/orders/'),
             'PRICE'    => $priceString,
         ]);
         // Админ-уведомление — только если включено
         if (Option::get('ushakov.telegram','SEND_ORDER_STATUS','Y') === 'Y') {
             $siteId = null;
             if ($order instanceof \Bitrix\Sale\Order && method_exists($order,'getSiteId')) { $siteId = (string)$order->getSiteId(); }
-            self::sendToAdmins($text, $siteId);
+            $tplAdmin = str_replace('#URL#', '#ADMIN_URL#', $tpl);
+            $adminText = self::render($tplAdmin, [
+                'ORDER_ID' => $orderId,
+                'STATUS'   => $statusName,
+                'ADMIN_URL'=> self::buildAbsoluteUrl('/bitrix/admin/sale_order_view.php?ID='.(int)$orderId.'&lang='.LANGUAGE_ID),
+                'URL'      => self::buildAbsoluteUrl('/personal/orders/'),
+                'PRICE'    => $priceString,
+            ]);
+            self::sendToAdmins($adminText, $siteId);
         }
 
         // Покупателю (если включено)
@@ -437,7 +477,17 @@ class Events
                     $siteId = (string)(method_exists($order,'getSiteId') ? $order->getSiteId() : SITE_ID);
                     $chatId = \Ushakov\Telegram\Repository\BindingRepository::getChatId($siteId, $userId);
                     $token = self::getToken();
-                    if ($chatId && $token) { Sender::send($token, [(string)$chatId], $text); }
+                    if ($chatId && $token) {
+                        $tplCustomer = str_replace('#ADMIN_URL#', '#URL#', $tpl);
+                        $customerText = self::render($tplCustomer, [
+                            'ORDER_ID' => $orderId,
+                            'STATUS'   => $statusName,
+                            'ADMIN_URL'=> self::buildAbsoluteUrl('/bitrix/admin/sale_order_view.php?ID='.(int)$orderId.'&lang='.LANGUAGE_ID),
+                            'URL'      => self::buildAbsoluteUrl('/personal/orders/'),
+                            'PRICE'    => $priceString,
+                        ]);
+                        Sender::send($token, [(string)$chatId], $customerText);
+                    }
                 }
             }
         }
@@ -545,10 +595,19 @@ class Events
             'PRICE'    => $order->getPrice() . ' ' . $order->getCurrency(),
             'PAYMENT'  => $paymentName,
             'ADMIN_URL'=> self::buildAbsoluteUrl('/bitrix/admin/sale_order_view.php?ID='.(int)$order->getId().'&lang='.LANGUAGE_ID),
+            'URL'      => self::buildAbsoluteUrl('/personal/orders/'),
         ]);
         if ($adminPayEnabled) {
             $siteId = (string)(method_exists($order,'getSiteId') ? $order->getSiteId() : SITE_ID);
-            self::sendToAdmins($text, $siteId);
+            $tplAdmin = str_replace('#URL#', '#ADMIN_URL#', $tpl);
+            $adminText = self::render($tplAdmin, [
+                'ORDER_ID' => $order->getId(),
+                'PRICE'    => $order->getPrice() . ' ' . $order->getCurrency(),
+                'PAYMENT'  => $paymentName,
+                'ADMIN_URL'=> self::buildAbsoluteUrl('/bitrix/admin/sale_order_view.php?ID='.(int)$order->getId().'&lang='.LANGUAGE_ID),
+                'URL'      => self::buildAbsoluteUrl('/personal/orders/'),
+            ]);
+            self::sendToAdmins($adminText, $siteId);
         }
 
         // Покупателю (если включено)
@@ -559,7 +618,17 @@ class Events
                 $siteId = (string)(method_exists($order,'getSiteId') ? $order->getSiteId() : SITE_ID);
                 $chatId = \Ushakov\Telegram\Repository\BindingRepository::getChatId($siteId, $userId);
                 $token = self::getToken();
-                if ($chatId && $token) { Sender::send($token, [(string)$chatId], $text); }
+                if ($chatId && $token) {
+                    $tplCustomer = str_replace('#ADMIN_URL#', '#URL#', $tpl);
+                    $customerText = self::render($tplCustomer, [
+                        'ORDER_ID' => $order->getId(),
+                        'PRICE'    => $order->getPrice() . ' ' . $order->getCurrency(),
+                        'PAYMENT'  => $paymentName,
+                        'ADMIN_URL'=> self::buildAbsoluteUrl('/bitrix/admin/sale_order_view.php?ID='.(int)$order->getId().'&lang='.LANGUAGE_ID),
+                        'URL'      => self::buildAbsoluteUrl('/personal/orders/'),
+                    ]);
+                    Sender::send($token, [(string)$chatId], $customerText);
+                }
             }
         }
     }

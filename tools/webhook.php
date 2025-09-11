@@ -19,33 +19,22 @@ Loader::includeModule($MODULE_ID);
 
 $secretQuery = $_GET['secret'] ?? '';
 $secretKeep  = (string) Option::get($MODULE_ID, 'WEBHOOK_SECRET', '');
-// Если секрет ещё не записан (например, после пересборки), но пришёл в query — примем и сохраним
-if ($secretKeep === '' && (string)$secretQuery !== '') {
-    $secretKeep = (string)$secretQuery;
-    Option::set($MODULE_ID, 'WEBHOOK_SECRET', $secretKeep);
-}
 $token       = (string) Option::get($MODULE_ID, 'BOT_TOKEN', '');
 
 // Вебхук должен быть доступен даже без BOT_TOKEN (только без исходящих сообщений)
-// Отвечаем 503 только если секрет отсутствует и в опциях, и в query
-if (!$secretKeep && !(string)$secretQuery) {
+// 503 если секрет не настроен в опциях
+if ($secretKeep === '') {
     http_response_code(503);
     echo 'module_not_configured';
     exit;
 }
 
-if (!hash_equals($secretKeep, (string)$secretQuery)) {
-    http_response_code(403);
-    echo 'forbidden';
-    exit;
-}
-
 $hdr = $_SERVER['HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN'] ?? '';
-if ($hdr && !hash_equals($hdr, $secretKeep)) {
-    http_response_code(403);
-    echo 'bad_secret_header';
-    exit;
-}
+// Проверяем секрет: либо заголовок, либо query параметр должны совпасть
+$okSecret = false;
+if ($hdr && hash_equals($hdr, $secretKeep)) { $okSecret = true; }
+if (!$okSecret && (string)$secretQuery !== '' && hash_equals((string)$secretQuery, $secretKeep)) { $okSecret = true; }
+if (!$okSecret) { http_response_code(403); echo 'forbidden'; exit; }
 
 $raw = file_get_contents('php://input');
 if ($raw === false || $raw === '') {

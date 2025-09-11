@@ -26,9 +26,9 @@ $MESS["USH_TG_TPL_ORDER_PAY"] = "Шаблон: оплата заказа";
 $MESS["USH_TG_TPL_USER_REGISTERED"] = "Шаблон: регистрация пользователя";
 $MESS["USH_TG_TPL_FORM_NEW"] = "Шаблон: новая заявка";
 
-$MESS["USH_TG_TPL_ORDER_NEW_DEF"] = "🛒 Новый заказ #ORDER_ID#\nФИО: #FIO#\nСумма: #PRICE#\nДоставка: #DELIVERY#\nОплата: #PAYMENT#\nСсылка: #ADMIN_URL#\nКорзина:\n#BASKET#";
-$MESS["USH_TG_TPL_ORDER_STATUS_DEF"] = "🔁 Статус заказа #ORDER_ID# изменён на: #STATUS#\nСумма: #PRICE#\nСсылка: #ADMIN_URL#";
-$MESS["USH_TG_TPL_ORDER_PAY_DEF"] = "✅ Заказ #ORDER_ID# оплачен. Сумма: #PRICE#\nМетод оплаты: #PAYMENT#\nСсылка: #ADMIN_URL#";
+$MESS["USH_TG_TPL_ORDER_NEW_DEF"] = "🛒 Новый заказ #ORDER_ID#\nФИО: #FIO#\nСумма: #PRICE#\nДоставка: #DELIVERY#\nОплата: #PAYMENT#\nСсылка: #URL#\nКорзина:\n#BASKET#";
+$MESS["USH_TG_TPL_ORDER_STATUS_DEF"] = "🔁 Статус заказа #ORDER_ID# изменён на: #STATUS#\nСумма: #PRICE#\nСсылка: #URL#";
+$MESS["USH_TG_TPL_ORDER_PAY_DEF"] = "✅ Заказ #ORDER_ID# оплачен. Сумма: #PRICE#\nМетод оплаты: #PAYMENT#\nСсылка: #URL#";
 $MESS["USH_TG_TPL_USER_REGISTERED_DEF"] = "👤 Новая регистрация\nID: #USER_ID#\nЛогин: #LOGIN#\nEmail: #EMAIL#";
 $MESS["USH_TG_TPL_FORM_NEW_DEF"] = "✉️ Новая заявка (#EVENT_NAME#)\nТема: #SUBJECT#\nПоля:\n#FIELDS#";
 

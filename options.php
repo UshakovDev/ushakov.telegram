@@ -157,9 +157,12 @@ $tabControl->Begin();
                         $botUsername = trim((string) Option::get($module_id, 'BOT_USERNAME', ''));
                         global $USER;
                         if ($botUsername !== '' && is_object($USER) && method_exists($USER, 'GetID')) {
+                            $botLink = 'https://t.me/'.rawurlencode($botUsername);
+                            // Ссылка на бота
+                            echo '<div style="margin-top:8px">'.Loc::getMessage('USH_TG_BOT_LINK').': ';
+                            echo '<a target="_blank" href="'.htmlspecialcharsbx($botLink).'">'.htmlspecialcharsbx($botLink)."</a></div>";
+                            // Диплинк используем только для получения payload, но не показываем
                             $deep = \Ushakov\Telegram\Service\WebhookRegistrar::buildDeepLink($botUsername, SITE_ID, (int)$USER->GetID());
-                            echo '<div style="margin-top:8px">'.Loc::getMessage('USH_TG_DEEPLINK').': ';
-                            echo '<a target="_blank" href="'.htmlspecialcharsbx($deep).'">'.htmlspecialcharsbx($deep)."</a></div>";
                             $payload = '';
                             $parsed = parse_url($deep);
                             if (!empty($parsed['query'])) {
@@ -167,7 +170,17 @@ $tabControl->Begin();
                                 if (!empty($q['start'])) { $payload = (string)$q['start']; }
                             }
                             if ($payload !== '') {
-                                echo '<div style="margin-top:4px">'.Loc::getMessage('USH_TG_DEEPLINK_MANUAL').': <code>/start '.htmlspecialcharsbx($payload)."</code></div>";
+                                $cmd = '/start ' . $payload;
+                                $host = (string)($_SERVER['HTTP_X_FORWARDED_HOST'] ?? $_SERVER['HTTP_HOST'] ?? '');
+                                $personalUrl = ($host !== '' ? 'https://'.$host : '') . '/personal/orders/';
+                                echo '<div style="margin-top:8px;max-width:760px">';
+                                echo '<div style="margin-bottom:6px">Привязать Telegram для текущего пользователя: отправьте боту команду</div>';
+                                $cmdEsc = htmlspecialcharsbx($cmd);
+                                echo '<div><code id="ush-tg-copy-cmd" style="cursor:pointer" title="Скопировать">'.$cmdEsc.'</code> ';
+                                echo '<span style="font-size:12px;color:#666">(кликните по команде, чтобы скопировать)</span></div>';
+                                echo '<div style="margin-top:6px">Либо перейдите на страницу личных заказов: <a target="_blank" href="'.htmlspecialcharsbx($personalUrl).'">'.htmlspecialcharsbx($personalUrl).'</a> и нажмите кнопку «Привязать Telegram».</div>';
+                                echo '<script>(function(){var el=document.getElementById("ush-tg-copy-cmd");if(!el)return;el.addEventListener("click",function(){var t=el.textContent||el.innerText;try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t);}else{var ta=document.createElement("textarea");ta.value=t;ta.style.position="fixed";ta.style.left="-1000px";ta.style.top="-1000px";document.body.appendChild(ta);ta.focus();ta.select();try{document.execCommand("copy");}catch(e){}document.body.removeChild(ta);}el.style.background="#e6ffed";setTimeout(function(){el.style.background="";},600);}catch(e){}});})();</script>';
+                                echo '</div>';
                             }
                         }
                         ?>

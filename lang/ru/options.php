@@ -39,6 +39,7 @@ $MESS["USH_TG_WEBHOOK_STATUS_NOT_CONFIGURED"] = "Заполните токен �
 $MESS["USH_TG_BTN_SET_WEBHOOK"] = "Установить вебхук";
 $MESS["USH_TG_BTN_DELETE_WEBHOOK"] = "Удалить вебхук";
 $MESS["USH_TG_BTN_INFO_WEBHOOK"] = "Проверить статус";
+$MESS["USH_TG_BOT_LINK"] = "Ссылка на бота";
 $MESS["USH_TG_DEEPLINK"] = "Дипссылка для /start (для текущего пользователя)";
 $MESS["USH_TG_DEEPLINK_MANUAL"] = "Или отправьте вручную в Telegram команду";
 

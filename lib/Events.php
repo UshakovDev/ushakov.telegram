@@ -146,7 +146,7 @@ class Events
                 'ORDER_ID' => $orderId,
                 'PRICE'    => $priceString,
                 'ADMIN_URL'=> self::buildAbsoluteUrl('/bitrix/admin/sale_order_view.php?ID='.(int)$orderId.'&lang='.LANGUAGE_ID),
-         
+            ]);
             if ($adminUncancelEnabled) { self::sendToAdmins($text2, method_exists($order,'getSiteId') ? (string)$order->getSiteId() : null); }
 
             if (Option::get('ushakov.telegram','CUSTOMER_NOTIFY_ENABLED','N') === 'Y'

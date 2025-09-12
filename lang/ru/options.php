@@ -17,7 +17,7 @@ $MESS["USH_TG_OPT_SEND_ORDER_STATUS"] = "Смена статуса заказа"
 $MESS["USH_TG_OPT_SEND_ORDER_PAY"] = "Оплата заказа";
 $MESS["USH_TG_OPT_SEND_ORDER_CANCELED"] = "Отмена заказа";
 $MESS["USH_TG_OPT_SEND_USER_REGISTERED"] = "Регистрация пользователя";
-$MESS["USH_TG_OPT_SEND_FORM_NEW"] = "Новая заявка (через почтовые события)";
+$MESS["USH_TG_OPT_SEND_FORM_NEW"] = "";
 $MESS["USH_TG_OPT_SEND_ORDER_UNCANCELED"] = "Снятие отмены заказа";
 $MESS["USH_TG_TPL_ORDER_CANCELED"] = "Шаблон: отмена заказа";
 $MESS["USH_TG_TPL_ORDER_UNCANCELED"] = "Шаблон: снятие отмены";
@@ -41,13 +41,13 @@ $MESS["USH_TG_TPL_ORDER_NEW"] = "Шаблон: новый заказ";
 $MESS["USH_TG_TPL_ORDER_STATUS"] = "Шаблон: смена статуса заказа";
 $MESS["USH_TG_TPL_ORDER_PAY"] = "Шаблон: оплата заказа";
 $MESS["USH_TG_TPL_USER_REGISTERED"] = "Шаблон: регистрация пользователя";
-$MESS["USH_TG_TPL_FORM_NEW"] = "Шаблон: новая заявка";
+$MESS["USH_TG_TPL_FORM_NEW"] = "";
 
 $MESS["USH_TG_TPL_ORDER_NEW_DEF"] = "🛒 Новый заказ #ORDER_ID#\nФИО: #FIO#\nСумма: #PRICE#\nДоставка: #DELIVERY#\nОплата: #PAYMENT#\nСсылка: #ADMIN_URL#\nКорзина:\n#BASKET#";
 $MESS["USH_TG_TPL_ORDER_STATUS_DEF"] = "🔁 Статус заказа #ORDER_ID# изменён на: #STATUS#\nСумма: #PRICE#\nСсылка: #ADMIN_URL#";
 $MESS["USH_TG_TPL_ORDER_PAY_DEF"] = "✅ Заказ #ORDER_ID# оплачен\nСумма: #PRICE#\nМетод оплаты: #PAYMENT#\nСсылка: #ADMIN_URL#";
 $MESS["USH_TG_TPL_USER_REGISTERED_DEF"] = "👤 Новая регистрация\nID: #USER_ID#\nЛогин: #LOGIN#\nEmail: #EMAIL#";
-$MESS["USH_TG_TPL_FORM_NEW_DEF"] = "✉️ Новая заявка (#EVENT_NAME#)\nТема: #SUBJECT#\nПоля:\n#FIELDS#";
+$MESS["USH_TG_TPL_FORM_NEW_DEF"] = "";
 
 $MESS["USH_TG_HINT_BLOCK_TITLE"] = "Подсказки: наведите курсор на значок возле параметров";
 $MESS["USH_TG_HINT_BOT_TOKEN"] = "Токен бота из BotFather (формат 1234567:AA...), используется для отправки сообщений и установки вебхука. Не делитесь токеном. Если сменили токен в BotFather: сначала нажмите \"Удалить вебхук\", затем \"Установить вебхук\".";

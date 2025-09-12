@@ -85,7 +85,7 @@ $aTabs = [
             ["SEND_ORDER_CANCELED", Loc::getMessage("USH_TG_OPT_SEND_ORDER_CANCELED"), "Y", ["checkbox"]],
             ["SEND_ORDER_UNCANCELED", Loc::getMessage("USH_TG_OPT_SEND_ORDER_UNCANCELED"), "Y", ["checkbox"]],
             ["SEND_USER_REGISTERED", Loc::getMessage("USH_TG_OPT_SEND_USER_REGISTERED"), "N", ["checkbox"]],
-            ["SEND_FORM_NEW", Loc::getMessage("USH_TG_OPT_SEND_FORM_NEW"), "N", ["checkbox"]],
+            
 
             // Клиентские уведомления
             Loc::getMessage("USH_TG_SECTION_CUSTOMERS"),
@@ -104,7 +104,7 @@ $aTabs = [
             ["TPL_ORDER_CANCELED", Loc::getMessage("USH_TG_TPL_ORDER_CANCELED"), Loc::getMessage("USH_TG_TPL_ORDER_CANCELED_DEF"), ["textarea", 6, 60]],
             ["TPL_ORDER_UNCANCELED", Loc::getMessage("USH_TG_TPL_ORDER_UNCANCELED"), Loc::getMessage("USH_TG_TPL_ORDER_UNCANCELED_DEF"), ["textarea", 6, 60]],
             ["TPL_USER_REGISTERED", Loc::getMessage("USH_TG_TPL_USER_REGISTERED"), Loc::getMessage("USH_TG_TPL_USER_REGISTERED_DEF"), ["textarea", 5, 60]],
-            ["TPL_FORM_NEW", Loc::getMessage("USH_TG_TPL_FORM_NEW"), Loc::getMessage("USH_TG_TPL_FORM_NEW_DEF"), ["textarea", 6, 60]],
+            
         ],
     ],
     [

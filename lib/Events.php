@@ -688,23 +688,7 @@ class Events
         self::pushOrSend($text);
     }
 
-    // Новая заявка через почтовые события
-    public static function onBeforeEventAdd(&$event, &$lid, &$arFields, &$message_id, &$files, &$languageId): void
-    {
-        if (Option::get('ushakov.telegram','SEND_FORM_NEW','N') !== 'Y') { return; }
-        // Можно ограничить типы событий через отдельную опцию (например, список через запятую)
-        $tpl = Option::get('ushakov.telegram','TPL_FORM_NEW', Loc::getMessage('USH_TG_TPL_FORM_NEW_DEF'));
-        $pairs = [];
-        foreach ($arFields as $k => $v) {
-            $pairs[] = $k . ': ' . (is_scalar($v) ? (string)$v : json_encode($v, JSON_UNESCAPED_UNICODE));
-        }
-        $text = self::render($tpl, [
-            'EVENT_NAME' => $event,
-            'SUBJECT'    => $arFields['SUBJECT'] ?? '',
-            'FIELDS'     => implode("\n", $pairs),
-        ]);
-        self::pushOrSend($text);
-    }
+    
 
     // Врезка на страницу профиля: кнопка «Привязать Telegram»
     public static function onEpilog(): void

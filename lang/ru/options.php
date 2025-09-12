@@ -21,8 +21,8 @@ $MESS["USH_TG_OPT_SEND_FORM_NEW"] = "Новая заявка (через поч�
 $MESS["USH_TG_OPT_SEND_ORDER_UNCANCELED"] = "Снятие отмены заказа";
 $MESS["USH_TG_TPL_ORDER_CANCELED"] = "Шаблон: отмена заказа";
 $MESS["USH_TG_TPL_ORDER_UNCANCELED"] = "Шаблон: снятие отмены";
-$MESS["USH_TG_TPL_ORDER_CANCELED_DEF"] = "❌ <b>Заказ #ORDER_ID# отменён</b>\n<b>Причина:</b> #REASON#\n<b>Сумма:</b> #PRICE#\n<b>Ссылка:</b> <a href=\"#ADMIN_URL#\">#ADMIN_URL#</a>";
-$MESS["USH_TG_TPL_ORDER_UNCANCELED_DEF"] = "♻️ <b>Отмена заказа #ORDER_ID# снята</b>\n<b>Сумма:</b> #PRICE#\n<b>Ссылка:</b> <a href=\"#ADMIN_URL#\">#ADMIN_URL#</a>";
+$MESS["USH_TG_TPL_ORDER_CANCELED_DEF"] = "❌ Заказ #ORDER_ID# отменён\nПричина: #REASON#\nСумма: #PRICE#\nСсылка: #ADMIN_URL#";
+$MESS["USH_TG_TPL_ORDER_UNCANCELED_DEF"] = "♻️ Отмена заказа #ORDER_ID# снята\nСумма: #PRICE#\nСсылка: #ADMIN_URL#";
 $MESS["USH_TG_NOTE_WEBHOOK_SET"] = "Вебхук установлен: #WEBHOOK#";
 $MESS["USH_TG_NOTE_WEBHOOK_DELETED"] = "Вебхук удалён";
 $MESS["USH_TG_NOTE_ERROR"] = "Ошибка: #ERROR#";
@@ -34,6 +34,7 @@ $MESS["USH_TG_COPY"] = "Скопировать";
 $MESS["USH_TG_BIND_COPY_HINT"] = "(кликните по команде, чтобы скопировать)";
 $MESS["USH_TG_BIND_PERSONAL_HINT"] = "Либо перейдите в личный кабинет: #URL# и нажмите кнопку «Привязать Telegram».";
 $MESS["USH_TG_NOTE_TEMPLATES_APPLIED"] = "Шаблоны обновлены (HTML-версия).";
+$MESS["USH_TG_NOTE_TEMPLATES_RESET"] = "Шаблоны сброшены к значениям по умолчанию.";
 
 $MESS["USH_TG_SECTION_TEMPLATES"] = "<b>Шаблоны сообщений</b>";
 $MESS["USH_TG_TPL_ORDER_NEW"] = "Шаблон: новый заказ";
@@ -42,11 +43,11 @@ $MESS["USH_TG_TPL_ORDER_PAY"] = "Шаблон: оплата заказа";
 $MESS["USH_TG_TPL_USER_REGISTERED"] = "Шаблон: регистрация пользователя";
 $MESS["USH_TG_TPL_FORM_NEW"] = "Шаблон: новая заявка";
 
-$MESS["USH_TG_TPL_ORDER_NEW_DEF"] = "🛒 <b>Новый заказ #ORDER_ID#</b>\n<b>ФИО:</b> #FIO#\n<b>Сумма:</b> #PRICE#\n<b>Доставка:</b> #DELIVERY#\n<b>Оплата:</b> #PAYMENT#\n<b>Ссылка:</b> <a href=\"#URL#\">#URL#</a>\n<b>Корзина:</b>\n#BASKET#";
-$MESS["USH_TG_TPL_ORDER_STATUS_DEF"] = "🔁 <b>Статус заказа #ORDER_ID#</b> изменён на: <b>#STATUS#</b>\n<b>Сумма:</b> #PRICE#\n<b>Ссылка:</b> <a href=\"#URL#\">#URL#</a>";
-$MESS["USH_TG_TPL_ORDER_PAY_DEF"] = "✅ <b>Заказ #ORDER_ID# оплачен</b>\n<b>Сумма:</b> #PRICE#\n<b>Метод оплаты:</b> #PAYMENT#\n<b>Ссылка:</b> <a href=\"#URL#\">#URL#</a>";
-$MESS["USH_TG_TPL_USER_REGISTERED_DEF"] = "👤 <b>Новая регистрация</b>\n<b>ID:</b> #USER_ID#\n<b>Логин:</b> #LOGIN#\n<b>Email:</b> #EMAIL#";
-$MESS["USH_TG_TPL_FORM_NEW_DEF"] = "✉️ <b>Новая заявка (#EVENT_NAME#)</b>\n<b>Тема:</b> #SUBJECT#\n<b>Поля:</b>\n#FIELDS#";
+$MESS["USH_TG_TPL_ORDER_NEW_DEF"] = "🛒 Новый заказ #ORDER_ID#\nФИО: #FIO#\nСумма: #PRICE#\nДоставка: #DELIVERY#\nОплата: #PAYMENT#\nСсылка: #ADMIN_URL#\nКорзина:\n#BASKET#";
+$MESS["USH_TG_TPL_ORDER_STATUS_DEF"] = "🔁 Статус заказа #ORDER_ID# изменён на: #STATUS#\nСумма: #PRICE#\nСсылка: #ADMIN_URL#";
+$MESS["USH_TG_TPL_ORDER_PAY_DEF"] = "✅ Заказ #ORDER_ID# оплачен\nСумма: #PRICE#\nМетод оплаты: #PAYMENT#\nСсылка: #ADMIN_URL#";
+$MESS["USH_TG_TPL_USER_REGISTERED_DEF"] = "👤 Новая регистрация\nID: #USER_ID#\nЛогин: #LOGIN#\nEmail: #EMAIL#";
+$MESS["USH_TG_TPL_FORM_NEW_DEF"] = "✉️ Новая заявка (#EVENT_NAME#)\nТема: #SUBJECT#\nПоля:\n#FIELDS#";
 
 $MESS["USH_TG_HINT_BLOCK_TITLE"] = "Подсказки: наведите курсор на значок возле параметров";
 $MESS["USH_TG_HINT_BOT_TOKEN"] = "Токен бота из BotFather (формат 1234567:AA...), используется для отправки сообщений и установки вебхука. Не делитесь токеном. Если сменили токен в BotFather: сначала нажмите \"Удалить вебхук\", затем \"Установить вебхук\".";
@@ -59,8 +60,10 @@ $MESS["USH_TG_WEBHOOK_STATUS_NOT_CONFIGURED"] = "Заполните токен �
 $MESS["USH_TG_BTN_SET_WEBHOOK"] = "Установить вебхук";
 $MESS["USH_TG_BTN_DELETE_WEBHOOK"] = "Удалить вебхук";
 $MESS["USH_TG_BTN_INFO_WEBHOOK"] = "Проверить статус";
-$MESS["USH_TG_BTN_APPLY_HTML_TEMPLATES"] = "Применить HTML-шаблоны";
-$MESS["USH_TG_BTN_APPLY_HTML_TEMPLATES_HINT"] = "Заменит текущие шаблоны на обновлённые дефолты с HTML-разметкой (жирный/ссылки)";
+$MESS["USH_TG_BTN_DEFAULTS"] = "По умолчанию";
+$MESS["USH_TG_BTN_DEFAULTS_HINT"] = "Сбросить шаблоны сообщений к значениям по умолчанию";
+$MESS["USH_TG_BTN_APPLY_HTML_TEMPLATES"] = "";
+$MESS["USH_TG_BTN_APPLY_HTML_TEMPLATES_HINT"] = "";
 $MESS["USH_TG_BOT_LINK"] = "Ссылка на бота";
 $MESS["USH_TG_DEEPLINK"] = "Дипссылка для /start (для текущего пользователя)";
 $MESS["USH_TG_DEEPLINK_MANUAL"] = "Или отправьте вручную в Telegram команду";

@@ -83,7 +83,9 @@ $aTabs = [
             ["SEND_ORDER_STATUS", Loc::getMessage("USH_TG_OPT_SEND_ORDER_STATUS"), "Y", ["checkbox"]],
             ["SEND_ORDER_PAY", Loc::getMessage("USH_TG_OPT_SEND_ORDER_PAY"), "Y", ["checkbox"]],
             ["SEND_ORDER_CANCELED", Loc::getMessage("USH_TG_OPT_SEND_ORDER_CANCELED"), "Y", ["checkbox"]],
+
             ["SEND_ORDER_UNCANCELED", Loc::getMessage("USH_TG_OPT_SEND_ORDER_UNCANCELED"), "Y", ["checkbox"]],
+
             ["SEND_USER_REGISTERED", Loc::getMessage("USH_TG_OPT_SEND_USER_REGISTERED"), "N", ["checkbox"]],
             
 
@@ -97,13 +99,24 @@ $aTabs = [
             ["CUSTOMER_EVENTS_ORDER_CANCEL", Loc::getMessage("USH_TG_OPT_CUSTOMER_ORDER_CANCEL"), "Y", ["checkbox"]],
             ["CUSTOMER_EVENTS_ORDER_UNCANCEL", Loc::getMessage("USH_TG_OPT_CUSTOMER_ORDER_UNCANCEL"), "Y", ["checkbox"]],
 
+            // Клиентские уведомления
+            Loc::getMessage("USH_TG_SECTION_CUSTOMERS"),
+            ["CUSTOMER_NOTIFY_ENABLED", Loc::getMessage("USH_TG_OPT_CUSTOMER_ENABLED"), "N", ["checkbox"]],
+            ["CUSTOMER_EVENTS_ORDER_NEW", Loc::getMessage("USH_TG_OPT_CUSTOMER_ORDER_NEW"), "Y", ["checkbox"]],
+            ["CUSTOMER_EVENTS_ORDER_STATUS", Loc::getMessage("USH_TG_OPT_CUSTOMER_ORDER_STATUS"), "Y", ["checkbox"]],
+            ["CUSTOMER_EVENTS_ORDER_PAY", Loc::getMessage("USH_TG_OPT_CUSTOMER_ORDER_PAY"), "Y", ["checkbox"]],
+            ["CUSTOMER_EVENTS_ORDER_CANCEL", Loc::getMessage("USH_TG_OPT_CUSTOMER_ORDER_CANCEL"), "Y", ["checkbox"]],
+            ["CUSTOMER_EVENTS_ORDER_UNCANCEL", Loc::getMessage("USH_TG_OPT_CUSTOMER_ORDER_UNCANCEL"), "Y", ["checkbox"]],
+
             // Шаблоны
             Loc::getMessage("USH_TG_SECTION_TEMPLATES"),
             ["TPL_ORDER_NEW", Loc::getMessage("USH_TG_TPL_ORDER_NEW"), Loc::getMessage("USH_TG_TPL_ORDER_NEW_DEF"), ["textarea", 6, 60]],
             ["TPL_ORDER_STATUS", Loc::getMessage("USH_TG_TPL_ORDER_STATUS"), Loc::getMessage("USH_TG_TPL_ORDER_STATUS_DEF"), ["textarea", 6, 60]],
             ["TPL_ORDER_PAY", Loc::getMessage("USH_TG_TPL_ORDER_PAY"), Loc::getMessage("USH_TG_TPL_ORDER_PAY_DEF"), ["textarea", 6, 60]],
+
             ["TPL_ORDER_CANCELED", Loc::getMessage("USH_TG_TPL_ORDER_CANCELED"), Loc::getMessage("USH_TG_TPL_ORDER_CANCELED_DEF"), ["textarea", 6, 60]],
             ["TPL_ORDER_UNCANCELED", Loc::getMessage("USH_TG_TPL_ORDER_UNCANCELED"), Loc::getMessage("USH_TG_TPL_ORDER_UNCANCELED_DEF"), ["textarea", 6, 60]],
+
             ["TPL_USER_REGISTERED", Loc::getMessage("USH_TG_TPL_USER_REGISTERED"), Loc::getMessage("USH_TG_TPL_USER_REGISTERED_DEF"), ["textarea", 5, 60]],
             
         ],
@@ -225,7 +238,7 @@ $tabControl->Begin();
                             <button type="submit" class="adm-btn-save ush-tg-btn" onclick="document.getElementById('tg-action').value='SET_WEBHOOK'"><?=Loc::getMessage('USH_TG_BTN_SET_WEBHOOK')?></button>
                             <button type="submit" class="adm-btn ush-tg-btn" onclick="document.getElementById('tg-action').value='DELETE_WEBHOOK'"><?=Loc::getMessage('USH_TG_BTN_DELETE_WEBHOOK')?></button>
                             <button type="submit" class="adm-btn ush-tg-btn" onclick="document.getElementById('tg-action').value='INFO_WEBHOOK'"><?=Loc::getMessage('USH_TG_BTN_INFO_WEBHOOK')?></button>
-                            
+
                         </div>
                         <?php
                         $botUsername = trim((string) Option::get($module_id, 'BOT_USERNAME', ''));
@@ -236,6 +249,7 @@ $tabControl->Begin();
                             echo '<div style="margin-top:8px">'.Loc::getMessage('USH_TG_BOT_LINK').': ';
                             echo '<a target="_blank" href="'.htmlspecialcharsbx($botLink).'">'.htmlspecialcharsbx($botLink)."</a></div>";
                             // Диплинк используем только для получения payload, но не показываем
+
                             // В админке SITE_ID может быть равен языку (например, 'ru'). Возьмём корректный siteId из контекста/дефолтного сайта
                             $siteIdCtx = (string) \Bitrix\Main\Context::getCurrent()->getSite();
                             if ($siteIdCtx === '' || strlen($siteIdCtx) > 2) {
@@ -251,6 +265,7 @@ $tabControl->Begin();
                                 if ($siteIdCtx === '' && defined('SITE_ID') && strlen((string)SITE_ID) <= 2) { $siteIdCtx = (string) SITE_ID; }
                             }
                             $deep = \Ushakov\Telegram\Service\WebhookRegistrar::buildDeepLink($botUsername, $siteIdCtx, (int)$USER->GetID());
+
                             $payload = '';
                             $parsed = parse_url($deep);
                             if (!empty($parsed['query'])) {
@@ -262,12 +277,14 @@ $tabControl->Begin();
                                 $host = (string)($_SERVER['HTTP_X_FORWARDED_HOST'] ?? $_SERVER['HTTP_HOST'] ?? '');
                                 $personalUrl = ($host !== '' ? 'https://'.$host : '') . '/personal/orders/';
                                 echo '<div style="margin-top:8px;max-width:760px">';
+
                                 echo '<div style="margin-bottom:6px">'.Loc::getMessage('USH_TG_BIND_HELP_TITLE').'</div>';
                                 $cmdEsc = htmlspecialcharsbx($cmd);
                                 echo '<div><code id="ush-tg-copy-cmd" style="cursor:pointer" title="'.htmlspecialcharsbx(Loc::getMessage('USH_TG_COPY')).'">'.$cmdEsc.'</code> ';
                                 echo '<span style="font-size:12px;color:#666">'.Loc::getMessage('USH_TG_BIND_COPY_HINT').'</span></div>';
                                 $personalLink = '<a target="_blank" href="'.htmlspecialcharsbx($personalUrl).'">'.htmlspecialcharsbx($personalUrl).'</a>';
                                 echo '<div style="margin-top:6px">'.str_replace('#URL#', $personalLink, Loc::getMessage('USH_TG_BIND_PERSONAL_HINT')).'</div>';
+
                                 echo '<script>(function(){var el=document.getElementById("ush-tg-copy-cmd");if(!el)return;el.addEventListener("click",function(){var t=el.textContent||el.innerText;try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t);}else{var ta=document.createElement("textarea");ta.value=t;ta.style.position="fixed";ta.style.left="-1000px";ta.style.top="-1000px";document.body.appendChild(ta);ta.focus();ta.select();try{document.execCommand("copy");}catch(e){}document.body.removeChild(ta);}el.style.background="#e6ffed";setTimeout(function(){el.style.background="";},600);}catch(e){}});})();</script>';
                                 echo '</div>';
                             }

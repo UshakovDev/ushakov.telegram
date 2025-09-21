@@ -111,7 +111,9 @@ if (mb_stripos($text, '/start') === 0 || mb_stripos($text, '/link') === 0 || pre
         $ok = hash_equals($calc, (string)$sign);
     }
 
+
     // Таблица создаётся/мигрируется в InstallDB. Здесь — только доступ к данным.
+
     /** @var \Bitrix\Main\DB\Connection $conn */
     $conn = Application::getConnection();
     $sqlHelper = $conn->getSqlHelper();
@@ -132,6 +134,7 @@ if (mb_stripos($text, '/start') === 0 || mb_stripos($text, '/link') === 0 || pre
             }
         }
         $tgUsernameSql = $sqlHelper->forSql($tgUsername);
+
         $chatIdSql     = $sqlHelper->forSql($chatIdRaw);
 
         // В проде таблица создаётся установщиком; если её нет — пропускаем запись, чтобы не ронять вебхук
@@ -145,6 +148,7 @@ if (mb_stripos($text, '/start') === 0 || mb_stripos($text, '/link') === 0 || pre
         } catch (\Throwable $e) {
             // Не роняем обработку апдейта
         }
+
 
         if ($token !== '') {
             $q = http_build_query([

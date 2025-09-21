@@ -46,7 +46,7 @@ class ushakov_telegram extends CModule
         }
         $APPLICATION->IncludeAdminFile(
             Loc::getMessage('USH_TG_INSTALL_TITLE'),
-            $_SERVER['DOCUMENT_ROOT'] . '/local/modules/' . $this->MODULE_ID . '/install/step.php'
+            dirname(__FILE__) . '/step.php'
         );
     }
 
@@ -58,7 +58,7 @@ class ushakov_telegram extends CModule
             case 1:
                 $APPLICATION->IncludeAdminFile(
                     Loc::getMessage('USH_TG_UNINSTALL_TITLE'),
-                    $_SERVER['DOCUMENT_ROOT'] . '/local/modules/' . $this->MODULE_ID . '/install/unstep.php'
+                    dirname(__FILE__) . '/unstep.php'
                 );
                 break;
             case 2:
@@ -187,7 +187,10 @@ class ushakov_telegram extends CModule
     {
         // Копируем публичные скрипты в /bitrix/tools/ushakov.telegram
         try {
-            $from = $_SERVER['DOCUMENT_ROOT'] . '/local/modules/' . $this->MODULE_ID . '/tools';
+            // Путь модуля: поддерживаем размещение как в /local/modules, так и в /bitrix/modules
+            $modulePath = dirname(__FILE__); // .../install
+            $moduleRoot = dirname($modulePath); // корень модуля
+            $from = $moduleRoot . '/tools';
             $to   = $_SERVER['DOCUMENT_ROOT'] . '/bitrix/tools/ushakov.telegram';
             if (is_dir($from)) {
                 if (!is_dir($to)) {

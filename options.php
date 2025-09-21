@@ -236,7 +236,21 @@ $tabControl->Begin();
                             echo '<div style="margin-top:8px">'.Loc::getMessage('USH_TG_BOT_LINK').': ';
                             echo '<a target="_blank" href="'.htmlspecialcharsbx($botLink).'">'.htmlspecialcharsbx($botLink)."</a></div>";
                             // Диплинк используем только для получения payload, но не показываем
-                            $deep = \Ushakov\Telegram\Service\WebhookRegistrar::buildDeepLink($botUsername, SITE_ID, (int)$USER->GetID());
+                            // В админке SITE_ID может быть равен языку (например, 'ru'). Возьмём корректный siteId из контекста/дефолтного сайта
+                            $siteIdCtx = (string) \Bitrix\Main\Context::getCurrent()->getSite();
+                            if ($siteIdCtx === '' || strlen($siteIdCtx) > 2) {
+                                try {
+                                    $row = \Bitrix\Main\SiteTable::getList([
+                                        'filter' => ['=ACTIVE' => 'Y'],
+                                        'order'  => ['DEF' => 'DESC', 'SORT' => 'ASC'],
+                                        'select' => ['LID'],
+                                        'limit'  => 1,
+                                    ])->fetch();
+                                    if ($row && !empty($row['LID'])) { $siteIdCtx = (string) $row['LID']; }
+                                } catch (\Throwable $e) { /* ignore */ }
+                                if ($siteIdCtx === '' && defined('SITE_ID') && strlen((string)SITE_ID) <= 2) { $siteIdCtx = (string) SITE_ID; }
+                            }
+                            $deep = \Ushakov\Telegram\Service\WebhookRegistrar::buildDeepLink($botUsername, $siteIdCtx, (int)$USER->GetID());
                             $payload = '';
                             $parsed = parse_url($deep);
                             if (!empty($parsed['query'])) {

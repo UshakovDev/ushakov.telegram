@@ -37,14 +37,16 @@ class ushakov_telegram extends CModule
     {
         global $APPLICATION;
         if (!IsModuleInstalled($this->MODULE_ID)) {
+            // Сначала регистрируем модуль, чтобы autoload и Loader::includeModule работали в InstallDB
+            RegisterModule($this->MODULE_ID);
+            \Bitrix\Main\Loader::includeModule($this->MODULE_ID);
             $this->InstallDB();
             $this->InstallEvents();
             $this->InstallFiles();
-            RegisterModule($this->MODULE_ID);
         }
         $APPLICATION->IncludeAdminFile(
             Loc::getMessage('USH_TG_INSTALL_TITLE'),
-            $_SERVER['DOCUMENT_ROOT'] . '/local/modules/' . $this->MODULE_ID . '/install/step.php'
+            dirname(__FILE__) . '/step.php'
         );
     }
 
@@ -56,7 +58,7 @@ class ushakov_telegram extends CModule
             case 1:
                 $APPLICATION->IncludeAdminFile(
                     Loc::getMessage('USH_TG_UNINSTALL_TITLE'),
-                    $_SERVER['DOCUMENT_ROOT'] . '/local/modules/' . $this->MODULE_ID . '/install/unstep.php'
+                    dirname(__FILE__) . '/unstep.php'
                 );
                 break;
             case 2:
@@ -71,16 +73,56 @@ class ushakov_telegram extends CModule
 
     public function InstallDB()
     {
-        // Создайте таблицы через ORM здесь (если нужны).
-        // Пример:
-        // \Ushakov\Telegram\ORM\QueueTable::getEntity()->createDbTable();
+        // Создание/миграции таблиц через ORM
+        try {
+            \Bitrix\Main\Loader::includeModule($this->MODULE_ID);
+            $conn = \Bitrix\Main\Application::getConnection();
+            $helper = $conn->getSqlHelper();
+
+            // Текущая версия схемы
+            $ver = (int) (\Bitrix\Main\Config\Option::get($this->MODULE_ID, 'SCHEMA_VERSION', '0'));
+
+            // v1: создать таблицу
+            if ($ver < 1) {
+                if (!$conn->isTableExists('b_ushakov_tg_bindings')) {
+                    \Ushakov\Telegram\ORM\BindingTable::getEntity()->createDbTable();
+                    // Индексы/уникальные ключи
+                    $conn->queryExecute("CREATE UNIQUE INDEX ux_ush_tg_site_user ON b_ushakov_tg_bindings (SITE_ID, USER_ID)");
+                    $conn->queryExecute("CREATE INDEX ix_ush_tg_chat ON b_ushakov_tg_bindings (CHAT_ID)");
+                }
+                $ver = 1; \Bitrix\Main\Config\Option::set($this->MODULE_ID, 'SCHEMA_VERSION', (string)$ver);
+            }
+
+            // v2: добавить ROLE, IS_STAFF, LAST_USED_AT (если нет)
+            if ($ver < 2) {
+                $col = $conn->query("SHOW COLUMNS FROM b_ushakov_tg_bindings LIKE 'ROLE'")->fetch();
+                if (!$col) { $conn->queryExecute("ALTER TABLE b_ushakov_tg_bindings ADD COLUMN ROLE VARCHAR(16) NULL AFTER CONSENT"); }
+                $col = $conn->query("SHOW COLUMNS FROM b_ushakov_tg_bindings LIKE 'IS_STAFF'")->fetch();
+                if (!$col) { $conn->queryExecute("ALTER TABLE b_ushakov_tg_bindings ADD COLUMN IS_STAFF TINYINT(1) NOT NULL DEFAULT 0 AFTER ROLE"); }
+                $col = $conn->query("SHOW COLUMNS FROM b_ushakov_tg_bindings LIKE 'LAST_USED_AT'")->fetch();
+                if (!$col) { $conn->queryExecute("ALTER TABLE b_ushakov_tg_bindings ADD COLUMN LAST_USED_AT DATETIME NULL AFTER IS_STAFF"); }
+                $ver = 2; \Bitrix\Main\Config\Option::set($this->MODULE_ID, 'SCHEMA_VERSION', (string)$ver);
+            }
+        } catch (\Throwable $e) {
+            // Логировать при необходимости
+        }
         return true;
     }
 
     public function UnInstallDB($removeData = false)
     {
         if ($removeData) {
-            // Удалите таблицы/данные, если пользователь выбрал соответствующий чекбокс.
+            try {
+                // Удаляем таблицу привязок, если существует
+                $conn = \Bitrix\Main\Application::getConnection();
+                if ($conn && $conn->isTableExists('b_ushakov_tg_bindings')) {
+                    $conn->queryExecute('DROP TABLE b_ushakov_tg_bindings');
+                }
+                // Удаляем все опции модуля (включая возможные варианты регистра имён)
+                \Bitrix\Main\Config\Option::delete($this->MODULE_ID);
+            } catch (\Throwable $e) {
+                // ignore
+            }
         }
         return true;
     }
@@ -99,8 +141,7 @@ class ushakov_telegram extends CModule
         $em->registerEventHandler('sale', 'OnSaleOrderPaid', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onSaleOrderPaid');
         // Регистрация пользователя
         $em->registerEventHandler('main', 'OnAfterUserAdd', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onUserRegistered');
-        // Новая заявка (перехват почтовых событий)
-        $em->registerEventHandler('main', 'OnBeforeEventAdd', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onBeforeEventAdd');
+
         // Отмена заказа
         $em->registerEventHandler('sale', 'OnSaleCancelOrder', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onSaleCancelOrder');
         // Врезка на страницу профиля (кнопка привязки)
@@ -131,7 +172,7 @@ class ushakov_telegram extends CModule
         $em->unRegisterEventHandler('sale', 'OnSalePayOrder', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onOrderPay');
         $em->unRegisterEventHandler('sale', 'OnSaleOrderPaid', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onSaleOrderPaid');
         $em->unRegisterEventHandler('main', 'OnAfterUserAdd', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onUserRegistered');
-        $em->unRegisterEventHandler('main', 'OnBeforeEventAdd', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onBeforeEventAdd');
+
         $em->unRegisterEventHandler('sale', 'OnSaleCancelOrder', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onSaleCancelOrder');
         $em->unRegisterEventHandler('main', 'OnEpilog', $this->MODULE_ID, '\\Ushakov\\Telegram\\Events', 'onEpilog');
 
@@ -144,13 +185,33 @@ class ushakov_telegram extends CModule
 
     public function InstallFiles()
     {
-        // Копируйте /install/themes, /install/components, /install/admin при необходимости.
+        // Копируем публичные скрипты в /bitrix/tools/ushakov.telegram
+        try {
+            // Путь модуля: поддерживаем размещение как в /local/modules, так и в /bitrix/modules
+            $modulePath = dirname(__FILE__); // .../install
+            $moduleRoot = dirname($modulePath); // корень модуля
+            $from = $moduleRoot . '/tools';
+            $to   = $_SERVER['DOCUMENT_ROOT'] . '/bitrix/tools/ushakov.telegram';
+            if (is_dir($from)) {
+                if (!is_dir($to)) {
+                    \Bitrix\Main\IO\Directory::createDirectory($to);
+                }
+                CopyDirFiles($from, $to, true, true);
+            }
+        } catch (\Throwable $e) {
+            // ignore
+        }
         return true;
     }
 
     public function UnInstallFiles()
     {
-        // Удаление скопированных файлов, если копировали в InstallFiles().
+        try {
+            // Удаляем каталог инструментов модуля из /bitrix/tools
+            DeleteDirFilesEx('/bitrix/tools/ushakov.telegram');
+        } catch (\Throwable $e) {
+            // ignore
+        }
         return true;
     }
 }

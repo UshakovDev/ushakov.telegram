@@ -30,15 +30,33 @@ if ($request->isPost() && check_bitrix_sessid()) {
             }
         }
         $r = \Ushakov\Telegram\Service\WebhookRegistrar::setWebhook($host);
-        $note = $r['ok'] ? 'Вебхук установлен: '.$r['webhook'] : 'Ошибка: '.htmlspecialcharsbx($r['error'] ?? '');
+        $note = $r['ok']
+            ? Loc::getMessage('USH_TG_NOTE_WEBHOOK_SET', ['#WEBHOOK#' => (string)($r['webhook'] ?? '')])
+            : Loc::getMessage('USH_TG_NOTE_ERROR', ['#ERROR#' => (string)($r['error'] ?? '')]);
         echo BeginNote().$note.EndNote();
     } elseif ($action === 'DELETE_WEBHOOK') {
         $r = \Ushakov\Telegram\Service\WebhookRegistrar::deleteWebhook();
-        $note = $r['ok'] ? 'Вебхук удалён' : 'Ошибка: '.htmlspecialcharsbx($r['error'] ?? '');
+        $note = $r['ok']
+            ? Loc::getMessage('USH_TG_NOTE_WEBHOOK_DELETED')
+            : Loc::getMessage('USH_TG_NOTE_ERROR', ['#ERROR#' => (string)($r['error'] ?? '')]);
         echo BeginNote().$note.EndNote();
     } elseif ($action === 'INFO_WEBHOOK') {
         $r = \Ushakov\Telegram\Service\WebhookRegistrar::getWebhookInfo();
         echo '<pre style="max-height:300px;overflow:auto">'.htmlspecialcharsbx(print_r($r['response'], true)).'</pre>';
+    } elseif ($action === 'RESET_TEMPLATES_DEFAULTS') {
+        // Сброс шаблонов до значений по умолчанию (берутся из lang/*.php)
+        foreach ([
+            'TPL_ORDER_NEW',
+            'TPL_ORDER_STATUS',
+            'TPL_ORDER_PAY',
+            'TPL_ORDER_CANCELED',
+            'TPL_ORDER_UNCANCELED',
+            'TPL_USER_REGISTERED',
+            'TPL_FORM_NEW',
+        ] as $optName) {
+            Option::delete($module_id, ['name' => $optName]);
+        }
+        echo BeginNote().Loc::getMessage('USH_TG_NOTE_TEMPLATES_RESET').EndNote();
     }
 }
 
@@ -65,9 +83,21 @@ $aTabs = [
             ["SEND_ORDER_STATUS", Loc::getMessage("USH_TG_OPT_SEND_ORDER_STATUS"), "Y", ["checkbox"]],
             ["SEND_ORDER_PAY", Loc::getMessage("USH_TG_OPT_SEND_ORDER_PAY"), "Y", ["checkbox"]],
             ["SEND_ORDER_CANCELED", Loc::getMessage("USH_TG_OPT_SEND_ORDER_CANCELED"), "Y", ["checkbox"]],
-            ["SEND_ORDER_UNCANCELED", "Снятие отмены заказа", "Y", ["checkbox"]],
+
+            ["SEND_ORDER_UNCANCELED", Loc::getMessage("USH_TG_OPT_SEND_ORDER_UNCANCELED"), "Y", ["checkbox"]],
+
             ["SEND_USER_REGISTERED", Loc::getMessage("USH_TG_OPT_SEND_USER_REGISTERED"), "N", ["checkbox"]],
-            ["SEND_FORM_NEW", Loc::getMessage("USH_TG_OPT_SEND_FORM_NEW"), "N", ["checkbox"]],
+            
+
+            // Клиентские уведомления
+            Loc::getMessage("USH_TG_SECTION_CUSTOMERS"),
+            ["CUSTOMER_NOTIFY_ENABLED", Loc::getMessage("USH_TG_OPT_CUSTOMER_ENABLED"), "N", ["checkbox"]],
+            ["CUSTOMER_SHOW_BIND_BUTTON", Loc::getMessage("USH_TG_OPT_CUSTOMER_SHOW_BIND"), "N", ["checkbox"]],
+            ["CUSTOMER_EVENTS_ORDER_NEW", Loc::getMessage("USH_TG_OPT_CUSTOMER_ORDER_NEW"), "Y", ["checkbox"]],
+            ["CUSTOMER_EVENTS_ORDER_STATUS", Loc::getMessage("USH_TG_OPT_CUSTOMER_ORDER_STATUS"), "Y", ["checkbox"]],
+            ["CUSTOMER_EVENTS_ORDER_PAY", Loc::getMessage("USH_TG_OPT_CUSTOMER_ORDER_PAY"), "Y", ["checkbox"]],
+            ["CUSTOMER_EVENTS_ORDER_CANCEL", Loc::getMessage("USH_TG_OPT_CUSTOMER_ORDER_CANCEL"), "Y", ["checkbox"]],
+            ["CUSTOMER_EVENTS_ORDER_UNCANCEL", Loc::getMessage("USH_TG_OPT_CUSTOMER_ORDER_UNCANCEL"), "Y", ["checkbox"]],
 
             // Клиентские уведомления
             Loc::getMessage("USH_TG_SECTION_CUSTOMERS"),
@@ -83,10 +113,12 @@ $aTabs = [
             ["TPL_ORDER_NEW", Loc::getMessage("USH_TG_TPL_ORDER_NEW"), Loc::getMessage("USH_TG_TPL_ORDER_NEW_DEF"), ["textarea", 6, 60]],
             ["TPL_ORDER_STATUS", Loc::getMessage("USH_TG_TPL_ORDER_STATUS"), Loc::getMessage("USH_TG_TPL_ORDER_STATUS_DEF"), ["textarea", 6, 60]],
             ["TPL_ORDER_PAY", Loc::getMessage("USH_TG_TPL_ORDER_PAY"), Loc::getMessage("USH_TG_TPL_ORDER_PAY_DEF"), ["textarea", 6, 60]],
-            ["TPL_ORDER_CANCELED", "Шаблон: отмена заказа", "❌ Заказ #ORDER_ID# отменён\nПричина: #REASON#\nСумма: #PRICE#\nСсылка: #ADMIN_URL#", ["textarea", 6, 60]],
-            ["TPL_ORDER_UNCANCELED", "Шаблон: снятие отмены", "♻️ Отмена заказа #ORDER_ID# снята\nСумма: #PRICE#\nСсылка: #ADMIN_URL#", ["textarea", 6, 60]],
+
+            ["TPL_ORDER_CANCELED", Loc::getMessage("USH_TG_TPL_ORDER_CANCELED"), Loc::getMessage("USH_TG_TPL_ORDER_CANCELED_DEF"), ["textarea", 6, 60]],
+            ["TPL_ORDER_UNCANCELED", Loc::getMessage("USH_TG_TPL_ORDER_UNCANCELED"), Loc::getMessage("USH_TG_TPL_ORDER_UNCANCELED_DEF"), ["textarea", 6, 60]],
+
             ["TPL_USER_REGISTERED", Loc::getMessage("USH_TG_TPL_USER_REGISTERED"), Loc::getMessage("USH_TG_TPL_USER_REGISTERED_DEF"), ["textarea", 5, 60]],
-            ["TPL_FORM_NEW", Loc::getMessage("USH_TG_TPL_FORM_NEW"), Loc::getMessage("USH_TG_TPL_FORM_NEW_DEF"), ["textarea", 6, 60]],
+            
         ],
     ],
     [
@@ -188,10 +220,10 @@ $tabControl->Begin();
                             $url  = (string)($resp['url'] ?? '');
                             $pending = (int)($resp['pending_update_count'] ?? 0);
                             $lastErr = (string)($resp['last_error_message'] ?? '');
-                            echo '<div>URL: '.htmlspecialcharsbx($url).'</div>';
-                            echo '<div>Pending: '.$pending.'</div>';
+                            echo '<div>'.Loc::getMessage('USH_TG_WEBHOOK_INFO_URL').': '.htmlspecialcharsbx($url).'</div>';
+                            echo '<div>'.Loc::getMessage('USH_TG_WEBHOOK_INFO_PENDING').': '.$pending.'</div>';
                             if ($lastErr !== '') {
-                                echo '<div>Last error: '.htmlspecialcharsbx($lastErr).'</div>';
+                                echo '<div>'.Loc::getMessage('USH_TG_WEBHOOK_INFO_LAST_ERROR').': '.htmlspecialcharsbx($lastErr).'</div>';
                             }
                         }
                         ?>
@@ -206,6 +238,7 @@ $tabControl->Begin();
                             <button type="submit" class="adm-btn-save ush-tg-btn" onclick="document.getElementById('tg-action').value='SET_WEBHOOK'"><?=Loc::getMessage('USH_TG_BTN_SET_WEBHOOK')?></button>
                             <button type="submit" class="adm-btn ush-tg-btn" onclick="document.getElementById('tg-action').value='DELETE_WEBHOOK'"><?=Loc::getMessage('USH_TG_BTN_DELETE_WEBHOOK')?></button>
                             <button type="submit" class="adm-btn ush-tg-btn" onclick="document.getElementById('tg-action').value='INFO_WEBHOOK'"><?=Loc::getMessage('USH_TG_BTN_INFO_WEBHOOK')?></button>
+
                         </div>
                         <?php
                         $botUsername = trim((string) Option::get($module_id, 'BOT_USERNAME', ''));
@@ -216,7 +249,23 @@ $tabControl->Begin();
                             echo '<div style="margin-top:8px">'.Loc::getMessage('USH_TG_BOT_LINK').': ';
                             echo '<a target="_blank" href="'.htmlspecialcharsbx($botLink).'">'.htmlspecialcharsbx($botLink)."</a></div>";
                             // Диплинк используем только для получения payload, но не показываем
-                            $deep = \Ushakov\Telegram\Service\WebhookRegistrar::buildDeepLink($botUsername, SITE_ID, (int)$USER->GetID());
+
+                            // В админке SITE_ID может быть равен языку (например, 'ru'). Возьмём корректный siteId из контекста/дефолтного сайта
+                            $siteIdCtx = (string) \Bitrix\Main\Context::getCurrent()->getSite();
+                            if ($siteIdCtx === '' || strlen($siteIdCtx) > 2) {
+                                try {
+                                    $row = \Bitrix\Main\SiteTable::getList([
+                                        'filter' => ['=ACTIVE' => 'Y'],
+                                        'order'  => ['DEF' => 'DESC', 'SORT' => 'ASC'],
+                                        'select' => ['LID'],
+                                        'limit'  => 1,
+                                    ])->fetch();
+                                    if ($row && !empty($row['LID'])) { $siteIdCtx = (string) $row['LID']; }
+                                } catch (\Throwable $e) { /* ignore */ }
+                                if ($siteIdCtx === '' && defined('SITE_ID') && strlen((string)SITE_ID) <= 2) { $siteIdCtx = (string) SITE_ID; }
+                            }
+                            $deep = \Ushakov\Telegram\Service\WebhookRegistrar::buildDeepLink($botUsername, $siteIdCtx, (int)$USER->GetID());
+
                             $payload = '';
                             $parsed = parse_url($deep);
                             if (!empty($parsed['query'])) {
@@ -228,11 +277,14 @@ $tabControl->Begin();
                                 $host = (string)($_SERVER['HTTP_X_FORWARDED_HOST'] ?? $_SERVER['HTTP_HOST'] ?? '');
                                 $personalUrl = ($host !== '' ? 'https://'.$host : '') . '/personal/orders/';
                                 echo '<div style="margin-top:8px;max-width:760px">';
-                                echo '<div style="margin-bottom:6px">Привязать Telegram для текущего пользователя: отправьте боту команду</div>';
+
+                                echo '<div style="margin-bottom:6px">'.Loc::getMessage('USH_TG_BIND_HELP_TITLE').'</div>';
                                 $cmdEsc = htmlspecialcharsbx($cmd);
-                                echo '<div><code id="ush-tg-copy-cmd" style="cursor:pointer" title="Скопировать">'.$cmdEsc.'</code> ';
-                                echo '<span style="font-size:12px;color:#666">(кликните по команде, чтобы скопировать)</span></div>';
-                                echo '<div style="margin-top:6px">Либо перейдите на страницу личных заказов: <a target="_blank" href="'.htmlspecialcharsbx($personalUrl).'">'.htmlspecialcharsbx($personalUrl).'</a> и нажмите кнопку «Привязать Telegram».</div>';
+                                echo '<div><code id="ush-tg-copy-cmd" style="cursor:pointer" title="'.htmlspecialcharsbx(Loc::getMessage('USH_TG_COPY')).'">'.$cmdEsc.'</code> ';
+                                echo '<span style="font-size:12px;color:#666">'.Loc::getMessage('USH_TG_BIND_COPY_HINT').'</span></div>';
+                                $personalLink = '<a target="_blank" href="'.htmlspecialcharsbx($personalUrl).'">'.htmlspecialcharsbx($personalUrl).'</a>';
+                                echo '<div style="margin-top:6px">'.str_replace('#URL#', $personalLink, Loc::getMessage('USH_TG_BIND_PERSONAL_HINT')).'</div>';
+
                                 echo '<script>(function(){var el=document.getElementById("ush-tg-copy-cmd");if(!el)return;el.addEventListener("click",function(){var t=el.textContent||el.innerText;try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t);}else{var ta=document.createElement("textarea");ta.value=t;ta.style.position="fixed";ta.style.left="-1000px";ta.style.top="-1000px";document.body.appendChild(ta);ta.focus();ta.select();try{document.execCommand("copy");}catch(e){}document.body.removeChild(ta);}el.style.background="#e6ffed";setTimeout(function(){el.style.background="";},600);}catch(e){}});})();</script>';
                                 echo '</div>';
                             }
@@ -247,6 +299,9 @@ $tabControl->Begin();
         }
     }
     $tabControl->Buttons(['btnApply' => true, 'btnCancel' => false, 'btnSaveAndAdd' => false]);
+    ?>
+    <button type="submit" class="adm-btn" title="<?=htmlspecialcharsbx(Loc::getMessage('USH_TG_BTN_DEFAULTS_HINT'))?>" onclick="var a=document.getElementById('tg-action'); if(a){a.value='RESET_TEMPLATES_DEFAULTS';}"><?=Loc::getMessage('USH_TG_BTN_DEFAULTS')?></button>
+    <?php
     echo bitrix_sessid_post();
     ?>
 </form>

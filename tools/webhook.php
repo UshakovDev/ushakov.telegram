@@ -22,7 +22,21 @@ $secretKeep  = (string) Option::get($MODULE_ID, 'WEBHOOK_SECRET', '');
 $token       = (string) Option::get($MODULE_ID, 'BOT_TOKEN', '');
 
 // Вебхук должен быть доступен даже без BOT_TOKEN (только без исходящих сообщений)
-// 503 если секрет не настроен в опциях
+// Если в опциях пусто — попробуем прочитать напрямую из b_option (на случай кеша)
+if ($secretKeep === '') {
+    try {
+        $conn = Application::getConnection();
+        $row = $conn->query("SELECT VALUE FROM b_option WHERE MODULE_ID='".$conn->getSqlHelper()->forSql($MODULE_ID)."' AND NAME='WEBHOOK_SECRET' ORDER BY SITE_ID IS NOT NULL, SITE_ID LIMIT 1")->fetch();
+        if ($row && isset($row['VALUE']) && (string)$row['VALUE'] !== '') {
+            $secretKeep = (string)$row['VALUE'];
+            // Попробуем записать обратно в опции, чтобы последующие вызовы шли через Option::get
+            Option::set($MODULE_ID, 'WEBHOOK_SECRET', $secretKeep);
+        }
+    } catch (\Throwable $e) {
+        // ignore
+    }
+}
+// 503 если секрет всё ещё отсутствует
 if ($secretKeep === '') {
     http_response_code(503);
     echo 'module_not_configured';
@@ -58,11 +72,11 @@ if (!$message) {
     exit;
 }
 
-$text   = trim((string)($message['text'] ?? ''));
-$chatId = (int)($message['chat']['id'] ?? 0);
+$text     = trim((string)($message['text'] ?? ''));
+$chatIdRaw= trim((string)($message['chat']['id'] ?? ''));
 $from   = $message['from'] ?? [];
 
-if ($chatId <= 0) {
+if ($chatIdRaw === '' ) {
     http_response_code(200);
     echo 'ok';
     exit;
@@ -97,37 +111,11 @@ if (mb_stripos($text, '/start') === 0 || mb_stripos($text, '/link') === 0 || pre
         $ok = hash_equals($calc, (string)$sign);
     }
 
-    // lazy create table
+    // Таблица создаётся/мигрируется в InstallDB. Здесь — только доступ к данным.
     /** @var \Bitrix\Main\DB\Connection $conn */
     $conn = Application::getConnection();
     $sqlHelper = $conn->getSqlHelper();
     $table = 'b_ushakov_tg_bindings';
-    if (!$conn->isTableExists($table)) {
-        $sql = "CREATE TABLE IF NOT EXISTS {$table} (
-                ID INT(11) NOT NULL AUTO_INCREMENT,
-                SITE_ID CHAR(2) NOT NULL,
-                USER_ID INT(11) NOT NULL DEFAULT 0,
-                CHAT_ID BIGINT NOT NULL,
-                TG_USERNAME VARCHAR(255) NULL,
-                CONSENT CHAR(1) NOT NULL DEFAULT 'Y',
-                ROLE VARCHAR(16) NULL,
-                IS_STAFF TINYINT(1) NOT NULL DEFAULT 0,
-                LAST_USED_AT DATETIME NULL,
-                CREATED_AT DATETIME NOT NULL,
-                PRIMARY KEY (ID),
-                UNIQUE KEY u_site_user (SITE_ID, USER_ID),
-                KEY i_chat (CHAT_ID)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
-        $conn->queryExecute($sql);
-    } else {
-        // Ленивая миграция недостающих колонок
-        $col = $conn->query("SHOW COLUMNS FROM {$table} LIKE 'ROLE'")->fetch();
-        if (!$col) { $conn->queryExecute("ALTER TABLE {$table} ADD COLUMN ROLE VARCHAR(16) NULL AFTER CONSENT"); }
-        $col = $conn->query("SHOW COLUMNS FROM {$table} LIKE 'IS_STAFF'")->fetch();
-        if (!$col) { $conn->queryExecute("ALTER TABLE {$table} ADD COLUMN IS_STAFF TINYINT(1) NOT NULL DEFAULT 0 AFTER ROLE"); }
-        $col = $conn->query("SHOW COLUMNS FROM {$table} LIKE 'LAST_USED_AT'")->fetch();
-        if (!$col) { $conn->queryExecute("ALTER TABLE {$table} ADD COLUMN LAST_USED_AT DATETIME NULL AFTER IS_STAFF"); }
-    }
 
     $tgUsername = (string)($from['username'] ?? '');
     if ($ok) {
@@ -144,15 +132,23 @@ if (mb_stripos($text, '/start') === 0 || mb_stripos($text, '/link') === 0 || pre
             }
         }
         $tgUsernameSql = $sqlHelper->forSql($tgUsername);
+        $chatIdSql     = $sqlHelper->forSql($chatIdRaw);
 
-        $sqlIns = "INSERT INTO {$table} (SITE_ID, USER_ID, CHAT_ID, TG_USERNAME, CONSENT, ROLE, IS_STAFF, LAST_USED_AT, CREATED_AT)
-            VALUES ('{$siteIdSql}', {$userIdInt}, {$chatId}, '{$tgUsernameSql}', 'Y', '{$role}', {$isStaff}, NOW(), NOW())
-            ON DUPLICATE KEY UPDATE CHAT_ID = VALUES(CHAT_ID), TG_USERNAME = VALUES(TG_USERNAME), CONSENT='Y', ROLE=VALUES(ROLE), IS_STAFF=VALUES(IS_STAFF), LAST_USED_AT=VALUES(LAST_USED_AT)";
-        $conn->queryExecute($sqlIns);
+        // В проде таблица создаётся установщиком; если её нет — пропускаем запись, чтобы не ронять вебхук
+        try {
+            if ($conn && $conn->isTableExists($table)) {
+                $sqlIns = "INSERT INTO {$table} (SITE_ID, USER_ID, CHAT_ID, TG_USERNAME, CONSENT, ROLE, IS_STAFF, LAST_USED_AT, CREATED_AT)
+                    VALUES ('{$siteIdSql}', {$userIdInt}, '{$chatIdSql}', '{$tgUsernameSql}', 'Y', '{$role}', {$isStaff}, NOW(), NOW())
+                    ON DUPLICATE KEY UPDATE CHAT_ID = VALUES(CHAT_ID), TG_USERNAME = VALUES(TG_USERNAME), CONSENT='Y', ROLE=VALUES(ROLE), IS_STAFF=VALUES(IS_STAFF), LAST_USED_AT=VALUES(LAST_USED_AT)";
+                $conn->queryExecute($sqlIns);
+            }
+        } catch (\Throwable $e) {
+            // Не роняем обработку апдейта
+        }
 
         if ($token !== '') {
             $q = http_build_query([
-                'chat_id' => $chatId,
+                'chat_id' => $chatIdRaw,
                 'text' => "✅ Привязка выполнена. Вы будете получать уведомления о заказах.",
             ]);
             @file_get_contents("https://api.telegram.org/bot{$token}/sendMessage?{$q}");
@@ -160,7 +156,7 @@ if (mb_stripos($text, '/start') === 0 || mb_stripos($text, '/link') === 0 || pre
     } else {
         if ($token !== '') {
             $q = http_build_query([
-                'chat_id' => $chatId,
+                'chat_id' => $chatIdRaw,
                 'text' => "Не удалось подтвердить привязку. Вернитесь на сайт и нажмите «Привязать Telegram» ещё раз.",
             ]);
             @file_get_contents("https://api.telegram.org/bot{$token}/sendMessage?{$q}");

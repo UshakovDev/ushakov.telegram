@@ -9,7 +9,7 @@ Loader::registerAutoLoadClasses("ushakov.telegram", [
     'Ushakov\\Telegram\\Sender' => 'lib/Sender.php',
     'Ushakov\\Telegram\\Agent'  => 'lib/Agent.php',
     'Ushakov\\Telegram\\AgentRunner'  => 'lib/AgentRunner.php',
-    // 'Ushakov\\Telegram\\ORM\\QueueTable' => 'lib/ORM/QueueTable.php',
+    'Ushakov\\Telegram\\ORM\\BindingTable' => 'lib/ORM/BindingTable.php',
     'Ushakov\\Telegram\\Service\\WebhookRegistrar' => 'lib/Service/WebhookRegistrar.php',
     'Ushakov\\Telegram\\Repository\\BindingRepository' => 'lib/Repository/BindingRepository.php',
 ]);

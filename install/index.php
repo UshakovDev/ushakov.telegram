@@ -37,10 +37,12 @@ class ushakov_telegram extends CModule
     {
         global $APPLICATION;
         if (!IsModuleInstalled($this->MODULE_ID)) {
+            // Сначала регистрируем модуль, чтобы autoload и Loader::includeModule работали в InstallDB
+            RegisterModule($this->MODULE_ID);
+            \Bitrix\Main\Loader::includeModule($this->MODULE_ID);
             $this->InstallDB();
             $this->InstallEvents();
             $this->InstallFiles();
-            RegisterModule($this->MODULE_ID);
         }
         $APPLICATION->IncludeAdminFile(
             Loc::getMessage('USH_TG_INSTALL_TITLE'),
@@ -71,9 +73,39 @@ class ushakov_telegram extends CModule
 
     public function InstallDB()
     {
-        // Создайте таблицы через ORM здесь (если нужны).
-        // Пример:
-        // \Ushakov\Telegram\ORM\QueueTable::getEntity()->createDbTable();
+        // Создание/миграции таблиц через ORM
+        try {
+            \Bitrix\Main\Loader::includeModule($this->MODULE_ID);
+            $conn = \Bitrix\Main\Application::getConnection();
+            $helper = $conn->getSqlHelper();
+
+            // Текущая версия схемы
+            $ver = (int) (\Bitrix\Main\Config\Option::get($this->MODULE_ID, 'SCHEMA_VERSION', '0'));
+
+            // v1: создать таблицу
+            if ($ver < 1) {
+                if (!$conn->isTableExists('b_ushakov_tg_bindings')) {
+                    \Ushakov\Telegram\ORM\BindingTable::getEntity()->createDbTable();
+                    // Индексы/уникальные ключи
+                    $conn->queryExecute("CREATE UNIQUE INDEX ux_ush_tg_site_user ON b_ushakov_tg_bindings (SITE_ID, USER_ID)");
+                    $conn->queryExecute("CREATE INDEX ix_ush_tg_chat ON b_ushakov_tg_bindings (CHAT_ID)");
+                }
+                $ver = 1; \Bitrix\Main\Config\Option::set($this->MODULE_ID, 'SCHEMA_VERSION', (string)$ver);
+            }
+
+            // v2: добавить ROLE, IS_STAFF, LAST_USED_AT (если нет)
+            if ($ver < 2) {
+                $col = $conn->query("SHOW COLUMNS FROM b_ushakov_tg_bindings LIKE 'ROLE'")->fetch();
+                if (!$col) { $conn->queryExecute("ALTER TABLE b_ushakov_tg_bindings ADD COLUMN ROLE VARCHAR(16) NULL AFTER CONSENT"); }
+                $col = $conn->query("SHOW COLUMNS FROM b_ushakov_tg_bindings LIKE 'IS_STAFF'")->fetch();
+                if (!$col) { $conn->queryExecute("ALTER TABLE b_ushakov_tg_bindings ADD COLUMN IS_STAFF TINYINT(1) NOT NULL DEFAULT 0 AFTER ROLE"); }
+                $col = $conn->query("SHOW COLUMNS FROM b_ushakov_tg_bindings LIKE 'LAST_USED_AT'")->fetch();
+                if (!$col) { $conn->queryExecute("ALTER TABLE b_ushakov_tg_bindings ADD COLUMN LAST_USED_AT DATETIME NULL AFTER IS_STAFF"); }
+                $ver = 2; \Bitrix\Main\Config\Option::set($this->MODULE_ID, 'SCHEMA_VERSION', (string)$ver);
+            }
+        } catch (\Throwable $e) {
+            // Логировать при необходимости
+        }
         return true;
     }
 
@@ -143,13 +175,30 @@ class ushakov_telegram extends CModule
 
     public function InstallFiles()
     {
-        // Копируйте /install/themes, /install/components, /install/admin при необходимости.
+        // Копируем публичные скрипты в /bitrix/tools/ushakov.telegram
+        try {
+            $from = $_SERVER['DOCUMENT_ROOT'] . '/local/modules/' . $this->MODULE_ID . '/tools';
+            $to   = $_SERVER['DOCUMENT_ROOT'] . '/bitrix/tools/ushakov.telegram';
+            if (is_dir($from)) {
+                if (!is_dir($to)) {
+                    \Bitrix\Main\IO\Directory::createDirectory($to);
+                }
+                CopyDirFiles($from, $to, true, true);
+            }
+        } catch (\Throwable $e) {
+            // ignore
+        }
         return true;
     }
 
     public function UnInstallFiles()
     {
-        // Удаление скопированных файлов, если копировали в InstallFiles().
+        try {
+            // Удаляем каталог инструментов модуля из /bitrix/tools
+            DeleteDirFilesEx('/bitrix/tools/ushakov.telegram');
+        } catch (\Throwable $e) {
+            // ignore
+        }
         return true;
     }
 }

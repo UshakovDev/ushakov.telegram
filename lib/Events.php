@@ -758,48 +758,5 @@ class Events
         echo '<script>'.$js.'</script>';
     }
 
-    // Врезка на страницу профиля: кнопка «Привязать Telegram»
-    public static function onEpilog(): void
-    {
-        global $USER, $APPLICATION;
-        if (!is_object($USER) || !$USER->IsAuthorized()) { return; }
-        $bot = trim((string) Option::get('ushakov.telegram','BOT_USERNAME',''));
-        if ($bot === '') { return; }
-
-        // Определяем, что мы на странице заказов (универсально для разных шаблонов)
-        $uri = (string)$APPLICATION->GetCurPage(false);
-        $isOrders = (stripos($uri, '/personal/order') !== false) || (stripos($uri, '/personal/orders') !== false);
-        if (!$isOrders) { return; }
-
-        $deep = \Ushakov\Telegram\Service\WebhookRegistrar::buildDeepLink($bot, SITE_ID, (int)$USER->GetID());
-        $payload = '';
-        $parsed = parse_url($deep);
-        if (!empty($parsed['query'])) {
-            parse_str($parsed['query'], $q);
-            if (!empty($q['start'])) { $payload = (string)$q['start']; }
-        }
-
-        // Ссылки на бота (без payload): пользователь вставит код вручную
-        $tgUrl  = 'tg://resolve?domain=' . rawurlencode($bot);
-        $webUrl = 'https://t.me/' . rawurlencode($bot);
-
-        // Универсальная вставка через JS (ищем подходящее место, иначе плавающая кнопка)
-        $btnText  = (string)(Loc::getMessage('USH_TG_DEEPLINK') ?: 'Привязать Telegram');
-        $payloadJs = json_encode((string)$payload);
-        $tgUrlJs   = json_encode((string)$tgUrl);
-        $webUrlJs  = json_encode((string)$webUrl);
-        $btnTextJs = json_encode((string)$btnText);
-        $js  = "(function(){\n";
-        $js .= "var p=location.pathname; var ok=(p.indexOf('/personal/order')!==-1)||(p.indexOf('/personal/orders')!==-1); if(!ok) return;\n";
-        $js .= "var payload = $payloadJs;\n";
-        $js .= "var tgUrl = $tgUrlJs;\n";
-        $js .= "var webUrl = $webUrlJs;\n";
-        $js .= "var btnText = $btnTextJs;\n";
-        $js .= "function copy(text){try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).catch(function(){});}else{var ta=document.createElement(\"textarea\");ta.value=text;ta.style.position=\"fixed\";ta.style.left=\"-1000px\";ta.style.top=\"-1000px\";document.body.appendChild(ta);ta.focus();ta.select();try{document.execCommand(\"copy\");}catch(e){}document.body.removeChild(ta);}}catch(e){}}\n";
-        $js .= "function build(){var wrap=document.createElement(\"div\");wrap.className=\"ushakov-tg-profile\";var btn=document.createElement(\"button\");btn.type=\"button\";btn.textContent=btnText;btn.style.cssText=\"display:inline-block;padding:8px 12px;background:#2fc6f6;color:#fff;border:none;border-radius:4px;cursor:pointer\";btn.onclick=function(){copy(\"/start \"+payload);try{window.open(tgUrl,\"_blank\");}catch(e){} setTimeout(function(){try{window.open(webUrl,\"_blank\");}catch(e){}},300);};var hint=document.createElement(\"div\");hint.style.cssText=\"margin-top:8px;max-width:560px;font-size:12px;line-height:1.5;color:#444;background:#f6f8fa;border:1px solid #e5e7eb;padding:8px 10px;border-radius:4px\";hint.textContent=\"Зачем привязывать? Вы будете получать мгновенные уведомления о статусе и оплате прямо в Telegram. Код для привязки автоматически копируется в буфер обмена. После открытия Telegram-бота вставьте этот код и отправьте сообщение.\";wrap.appendChild(btn);wrap.appendChild(hint);return wrap;}\n";
-        $js .= "function place(block){var targets=[\".sale-order-list\",\".sale-order-list-container\",\"h1\",\".page-title\",\".content-title\"];var t=null;for(var i=0;i<targets.length;i++){var cand=document.querySelector(targets[i]);if(cand){t=cand;break;}}if(t){if(t.tagName&&t.tagName.toLowerCase()===\"h1\"&&t.parentNode){t.parentNode.insertBefore(block,t.nextSibling);try{var mb=parseFloat(getComputedStyle(t).marginBottom)||0;var desired=20;block.style.marginTop=(desired-mb)+\"px\";}catch(e){}}else{t.insertAdjacentElement(\"afterbegin\",block);}return true;}var cont=document.querySelector(\"#content, .workarea, main, .container\");if(cont){cont.appendChild(block);return true;}block.style.position=\"fixed\";block.style.right=\"16px\";block.style.bottom=\"16px\";block.style.zIndex=9999;document.body.appendChild(block);return true;}\n";
-        $js .= "document.addEventListener(\"DOMContentLoaded\",function(){place(build());});\n";
-        $js .= "})();";
-        echo '<script>'.$js.'</script>';
-    }
+    
 }

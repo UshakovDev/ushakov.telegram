@@ -698,6 +698,21 @@ class Events
         $bot = trim((string) Option::get('ushakov.telegram','BOT_USERNAME',''));
         if ($bot === '') { return; }
 
+        // Показ кнопки: сотрудникам показываем всегда; покупателям — по опции CUSTOMER_SHOW_BIND_BUTTON
+        $isStaff = false;
+        try {
+            $groupsOpt = (string) Option::get('ushakov.telegram','STAFF_GROUP_IDS','');
+            $staffGroupIds = array_filter(array_map('intval', array_map('trim', explode(',', $groupsOpt))));
+            if (!empty($staffGroupIds) && method_exists($USER, 'GetUserGroup')) {
+                $userGroups = (array) $USER->GetUserGroup($USER->GetID());
+                $isStaff = (bool) array_intersect($staffGroupIds, array_map('intval', $userGroups));
+            }
+        } catch (\Throwable $e) { /* ignore */ }
+        if (!$isStaff) {
+            // Для покупателей учитываем переключатель
+            if (Option::get('ushakov.telegram','CUSTOMER_SHOW_BIND_BUTTON','N') !== 'Y') { return; }
+        }
+
         // Определяем, что мы на странице заказов (универсально для разных шаблонов)
         $uri = (string)$APPLICATION->GetCurPage(false);
         $isOrders = (stripos($uri, '/personal/order') !== false) || (stripos($uri, '/personal/orders') !== false);

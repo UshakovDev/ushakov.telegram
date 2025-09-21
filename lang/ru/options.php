@@ -91,6 +91,7 @@ $MESS["USH_TG_HELP_WEBHOOK_TEXT"] = "Вебхук - это адрес, на ко
 $MESS["USH_TG_OPT_STAFF_GROUPS"] = "ID групп сотрудников (через запятую)";
 $MESS["USH_TG_SECTION_CUSTOMERS"] = "<b>Уведомления для покупателей</b>";
 $MESS["USH_TG_OPT_CUSTOMER_ENABLED"] = "Включить уведомления покупателям";
+$MESS["USH_TG_OPT_CUSTOMER_SHOW_BIND"] = "Показывать кнопку «Привязать Telegram» на страницах заказов";
 $MESS["USH_TG_OPT_CUSTOMER_ORDER_NEW"] = "Покупателям: новый заказ";
 $MESS["USH_TG_OPT_CUSTOMER_ORDER_STATUS"] = "Покупателям: смена статуса";
 $MESS["USH_TG_OPT_CUSTOMER_ORDER_PAY"] = "Покупателям: оплата заказа";

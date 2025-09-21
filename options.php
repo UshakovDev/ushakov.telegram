@@ -90,6 +90,7 @@ $aTabs = [
             // Клиентские уведомления
             Loc::getMessage("USH_TG_SECTION_CUSTOMERS"),
             ["CUSTOMER_NOTIFY_ENABLED", Loc::getMessage("USH_TG_OPT_CUSTOMER_ENABLED"), "N", ["checkbox"]],
+            ["CUSTOMER_SHOW_BIND_BUTTON", Loc::getMessage("USH_TG_OPT_CUSTOMER_SHOW_BIND"), "N", ["checkbox"]],
             ["CUSTOMER_EVENTS_ORDER_NEW", Loc::getMessage("USH_TG_OPT_CUSTOMER_ORDER_NEW"), "Y", ["checkbox"]],
             ["CUSTOMER_EVENTS_ORDER_STATUS", Loc::getMessage("USH_TG_OPT_CUSTOMER_ORDER_STATUS"), "Y", ["checkbox"]],
             ["CUSTOMER_EVENTS_ORDER_PAY", Loc::getMessage("USH_TG_OPT_CUSTOMER_ORDER_PAY"), "Y", ["checkbox"]],

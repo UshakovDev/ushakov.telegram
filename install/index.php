@@ -112,7 +112,17 @@ class ushakov_telegram extends CModule
     public function UnInstallDB($removeData = false)
     {
         if ($removeData) {
-            // Удалите таблицы/данные, если пользователь выбрал соответствующий чекбокс.
+            try {
+                // Удаляем таблицу привязок, если существует
+                $conn = \Bitrix\Main\Application::getConnection();
+                if ($conn && $conn->isTableExists('b_ushakov_tg_bindings')) {
+                    $conn->queryExecute('DROP TABLE b_ushakov_tg_bindings');
+                }
+                // Удаляем все опции модуля (включая возможные варианты регистра имён)
+                \Bitrix\Main\Config\Option::delete($this->MODULE_ID);
+            } catch (\Throwable $e) {
+                // ignore
+            }
         }
         return true;
     }

@@ -86,6 +86,30 @@ if ($chatIdRaw === '' ) {
 // 1) "/start <payload>" (с пробелом)
 // 2) "/start<payload>" (без пробела)
 // 3) просто "<payload>" отдельным сообщением
+// Отписка: /stop или /unlink — поддержка вариантов /stop, /stop@Bot, 
+// с любыми пробелами/аргументами после команды
+if (preg_match('~^/(stop|unlink)(?:@[A-Za-z0-9_]+)?(?:\s+|=|$)~ui', $text)) {
+    try {
+        /** @var \Bitrix\Main\DB\Connection $conn */
+        $conn = Application::getConnection();
+        if ($conn && $conn->isTableExists('b_ushakov_tg_bindings')) {
+            $sqlHelper = $conn->getSqlHelper();
+            $chatIdSql = $sqlHelper->forSql($chatIdRaw);
+            $conn->queryExecute("DELETE FROM b_ushakov_tg_bindings WHERE CHAT_ID='".$chatIdSql."'");
+        }
+    } catch (\Throwable $e) { /* ignore */ }
+    if ($token !== '') {
+        $q = http_build_query([
+            'chat_id' => $chatIdRaw,
+            'text' => "Вы отписались от уведомлений. Чтобы подписаться снова - свяжите Telegram в личном кабинете.",
+        ]);
+        @file_get_contents("https://api.telegram.org/bot{$token}/sendMessage?{$q}");
+    }
+    http_response_code(200);
+    echo 'ok';
+    exit;
+}
+
 if (mb_stripos($text, '/start') === 0 || mb_stripos($text, '/link') === 0 || preg_match('~^[a-zA-Z]{2}-\d+-[a-f0-9]{32,}+$~', trim($text))) {
     $payload = '';
     if (mb_stripos($text, '/start') === 0) {

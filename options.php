@@ -86,6 +86,8 @@ $aTabs = [
 
             ["SEND_ORDER_UNCANCELED", Loc::getMessage("USH_TG_OPT_SEND_ORDER_UNCANCELED"), "Y", ["checkbox"]],
 
+            ["SEND_SHIPMENT_STATUS", Loc::getMessage("USH_TG_OPT_SEND_SHIPMENT_STATUS"), "Y", ["checkbox"]],
+
             ["SEND_USER_REGISTERED", Loc::getMessage("USH_TG_OPT_SEND_USER_REGISTERED"), "N", ["checkbox"]],
             
 
@@ -98,6 +100,7 @@ $aTabs = [
             ["CUSTOMER_EVENTS_ORDER_PAY", Loc::getMessage("USH_TG_OPT_CUSTOMER_ORDER_PAY"), "Y", ["checkbox"]],
             ["CUSTOMER_EVENTS_ORDER_CANCEL", Loc::getMessage("USH_TG_OPT_CUSTOMER_ORDER_CANCEL"), "Y", ["checkbox"]],
             ["CUSTOMER_EVENTS_ORDER_UNCANCEL", Loc::getMessage("USH_TG_OPT_CUSTOMER_ORDER_UNCANCEL"), "Y", ["checkbox"]],
+            ["CUSTOMER_EVENTS_SHIPMENT_STATUS", Loc::getMessage("USH_TG_OPT_CUSTOMER_SHIPMENT_STATUS"), "Y", ["checkbox"]],
 
 
             // Шаблоны
@@ -110,6 +113,8 @@ $aTabs = [
             ["TPL_ORDER_UNCANCELED", Loc::getMessage("USH_TG_TPL_ORDER_UNCANCELED"), Loc::getMessage("USH_TG_TPL_ORDER_UNCANCELED_DEF"), ["textarea", 6, 60]],
 
             ["TPL_USER_REGISTERED", Loc::getMessage("USH_TG_TPL_USER_REGISTERED"), Loc::getMessage("USH_TG_TPL_USER_REGISTERED_DEF"), ["textarea", 5, 60]],
+
+            ["TPL_SHIPMENT_STATUS", Loc::getMessage("USH_TG_TPL_SHIPMENT_STATUS"), Loc::getMessage("USH_TG_TPL_SHIPMENT_STATUS_DEF"), ["textarea", 6, 60]],
             
         ],
     ],

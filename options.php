@@ -204,6 +204,13 @@ $tabControl->Begin();
                         </div>
                     </div>
                     
+                    <div class="adm-info-message" style="margin-top: 8px;">
+                        <b><?=Loc::getMessage('USH_TG_HELP_STAFF_DOUBLE_TITLE')?></b><br/>
+                        <div style="margin-top:6px; line-height:1.5;">
+                            <?=Loc::getMessage('USH_TG_HELP_STAFF_DOUBLE_TEXT')?>
+                        </div>
+                    </div>
+
                     <div class="adm-info-message">
                         <b><?=Loc::getMessage('USH_TG_WEBHOOK_STATUS')?></b><br/>
                         <?php

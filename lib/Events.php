@@ -118,7 +118,7 @@ class Events
 
             $adminUrl = self::buildAbsoluteUrl('/bitrix/admin/sale_order_view.php?ID='.(int)$orderId.'&lang='.LANGUAGE_ID);
             $userUrl  = self::buildAbsoluteUrl('/personal/orders/');
-            // Админам — по их шаблону (если используется #URL#, подменим на #ADMIN_URL#)
+            // Админам - по их шаблону (если используется #URL#, подменим на #ADMIN_URL#)
             if ($adminCancelEnabled) {
                 $tplAdmin = str_replace('#URL#', '#ADMIN_URL#', $tpl);
                 $textAdmin = self::render($tplAdmin, [
@@ -142,7 +142,7 @@ class Events
                         $token = self::getToken();
 
                         if ($chatId && $token) {
-                            // Покупателям — принудительно на #URL# (личные заказы)
+                            // Покупателям - принудительно на #URL# (личные заказы)
                             $tplCustomer = str_replace('#ADMIN_URL#', '#URL#', $tpl);
                             $textCustomer = self::render($tplCustomer, [
                                 'ORDER_ID' => $orderId,
@@ -370,7 +370,7 @@ class Events
             'PHONE'    => $props['PHONE'] ?? '',
         ]);
 
-        // Админское уведомление — только если включено SEND_ORDER_NEW
+        // Админское уведомление - только если включено SEND_ORDER_NEW
         if (Option::get('ushakov.telegram','SEND_ORDER_NEW','Y') === 'Y') {
             $siteId = (string)(method_exists($entity,'getSiteId') ? $entity->getSiteId() : SITE_ID);
             // Если в шаблоне используется #URL#, подменим его на #ADMIN_URL# для сотрудников
@@ -494,7 +494,7 @@ class Events
             'URL'      => self::buildAbsoluteUrl('/personal/orders/'),
             'PRICE'    => $priceString,
         ]);
-        // Админ-уведомление — только если включено
+        // Админ-уведомление - только если включено
         if (Option::get('ushakov.telegram','SEND_ORDER_STATUS','Y') === 'Y') {
             $siteId = null;
             if ($order instanceof \Bitrix\Sale\Order && method_exists($order,'getSiteId')) { $siteId = (string)$order->getSiteId(); }
@@ -682,10 +682,89 @@ class Events
         self::onOrderPay($event);
     }
 
+    // Статус отгрузки
+    public static function onShipmentSaved(\Bitrix\Main\Event $event): void
+    {
+        try {
+            /** @var \Bitrix\Sale\Shipment $shipment */
+            $shipment = $event->getParameter('ENTITY');
+            if (!$shipment) { return; }
+
+            // Реагируем ТОЛЬКО на смену статуса: сравним прежнее значение и новое
+            $oldValues = (array) $event->getParameter('VALUES');
+            // Если STATUS_ID не присутствует среди изменённых полей - статус не менялся
+            if (!array_key_exists('STATUS_ID', $oldValues)) { return; }
+            $oldStatus = (string)$oldValues['STATUS_ID'];
+            $newStatus = (string)$shipment->getField('STATUS_ID');
+            $isNewShipment = (bool)$event->getParameter('IS_NEW');
+            if ($isNewShipment || $oldStatus === $newStatus) { return; }
+
+            $orderId = 0;
+            if (method_exists($shipment, 'getField')) { $orderId = (int)$shipment->getField('ORDER_ID'); }
+            if ($orderId <= 0) { return; }
+
+            $order = \Bitrix\Sale\Order::load($orderId);
+            if (!$order) { return; }
+            $siteId  = (string)(method_exists($order,'getSiteId') ? $order->getSiteId() : SITE_ID);
+            $delivery = '';
+            if ($service = $shipment->getDelivery()) { $delivery = (string)$service->getName(); }
+            $statusCode = $newStatus;
+            $statusName = $statusCode;
+            if ($statusCode !== '') {
+                $row = \Bitrix\Sale\Internals\StatusLangTable::getList([
+                    'filter' => ['=STATUS_ID' => $statusCode, '=LID' => LANGUAGE_ID],
+                    'select' => ['NAME']
+                ])->fetch();
+                if ($row && !empty($row['NAME'])) { $statusName = (string)$row['NAME']; }
+            }
+            if (method_exists($shipment,'isSystem') && $shipment->isSystem()) { return; }
+            $track = (string)$shipment->getField('TRACKING_NUMBER');
+
+            $tpl = Option::get('ushakov.telegram','TPL_SHIPMENT_STATUS', Loc::getMessage('USH_TG_TPL_SHIPMENT_STATUS_DEF'));
+            $adminUrl = self::buildAbsoluteUrl('/bitrix/admin/sale_order_view.php?ID='.(int)$orderId.'&lang='.LANGUAGE_ID);
+
+            // Сотрудники
+            if (Option::get('ushakov.telegram','SEND_SHIPMENT_STATUS','Y') === 'Y') {
+                $tplAdmin = str_replace('#URL#', '#ADMIN_URL#', $tpl);
+                $textA = self::render($tplAdmin, [
+                    'ORDER_ID' => $orderId,
+                    'SHIPMENT_STATUS' => $statusName,
+                    'DELIVERY_NAME' => $delivery,
+                    'TRACKING' => $track,
+                    'URL' => self::buildAbsoluteUrl('/personal/orders/'),
+                    'ADMIN_URL' => $adminUrl,
+                ]);
+                self::sendToAdmins($textA, $siteId);
+            }
+
+            // Покупатель
+            if (Option::get('ushakov.telegram','CUSTOMER_NOTIFY_ENABLED','N') === 'Y'
+                && Option::get('ushakov.telegram','CUSTOMER_EVENTS_SHIPMENT_STATUS','Y') === 'Y') {
+                $userId = (int)$order->getUserId();
+                if ($userId > 0) {
+                    $chatId = \Ushakov\Telegram\Repository\BindingRepository::getChatId($siteId, $userId);
+                    $token = self::getToken();
+                    if ($chatId && $token) {
+                        $tplCustomer = str_replace('#ADMIN_URL#', '#URL#', $tpl);
+                        $textC = self::render($tplCustomer, [
+                            'ORDER_ID' => $orderId,
+                            'SHIPMENT_STATUS' => $statusName,
+                            'DELIVERY_NAME' => $delivery,
+                            'TRACKING' => $track,
+                            'URL' => self::buildAbsoluteUrl('/personal/orders/'),
+                            'ADMIN_URL' => $adminUrl,
+                        ]);
+                        Sender::send($token, [(string)$chatId], $textC);
+                    }
+                }
+            }
+        } catch (\Throwable $e) { /* ignore */ }
+    }
+
     // Регистрация пользователя
     public static function onUserRegistered($fields): void
     {
-        // Админское уведомление о регистрации — по флагу
+        // Админское уведомление о регистрации - по флагу
         if (Option::get('ushakov.telegram','SEND_USER_REGISTERED','N') !== 'Y') { return; }
         $tpl = Option::get('ushakov.telegram','TPL_USER_REGISTERED', Loc::getMessage('USH_TG_TPL_USER_REGISTERED_DEF'));
         $text = self::render($tpl, [
@@ -706,7 +785,7 @@ class Events
         $bot = trim((string) Option::get('ushakov.telegram','BOT_USERNAME',''));
         if ($bot === '') { return; }
 
-        // Показ кнопки: сотрудникам показываем всегда; покупателям — по опции CUSTOMER_SHOW_BIND_BUTTON
+        // Показ кнопки: сотрудникам показываем всегда; покупателям - по опции CUSTOMER_SHOW_BIND_BUTTON
         $isStaff = false;
         try {
             $groupsOpt = (string) Option::get('ushakov.telegram','STAFF_GROUP_IDS','');

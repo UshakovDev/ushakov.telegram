@@ -133,6 +133,15 @@ if ($request->isPost() && ( $request['save'] !== null || $request['apply'] !== n
             __AdmSettingsSaveOptions($module_id, $aTab['OPTIONS']);
         }
     }
+    // Обработаем сохранение прав доступа: подключим стандартный обработчик до редиректа
+    // Ему требуется переменная $Update и массивы $GROUPS/$RIGHTS/$SITES
+    $Update = 'Y';
+    $GROUPS = (array)$request->getPost('GROUPS');
+    $RIGHTS = (array)$request->getPost('RIGHTS');
+    $SITES  = (array)$request->getPost('SITES');
+    ob_start();
+    require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/admin/group_rights.php");
+    ob_end_clean();
     LocalRedirect($APPLICATION->GetCurPage() . '?mid=' . urlencode($module_id) . '&lang=' . LANGUAGE_ID);
 }
 

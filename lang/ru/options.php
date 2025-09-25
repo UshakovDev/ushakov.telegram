@@ -50,7 +50,7 @@ $MESS["USH_TG_TPL_ORDER_NEW_DEF"] = "✳️ Новый заказ #ORDER_ID#\nФ
 $MESS["USH_TG_TPL_ORDER_STATUS_DEF"] = "↻ Статус заказа #ORDER_ID# изменён на: #STATUS#\nСумма: #PRICE#\nСсылка: #ADMIN_URL#";
 $MESS["USH_TG_TPL_ORDER_PAY_DEF"] = "✅ Заказ #ORDER_ID# оплачен\nСумма: #PRICE#\nМетод оплаты: #PAYMENT#\nСсылка: #ADMIN_URL#";
 
-$MESS["USH_TG_TPL_USER_REGISTERED_DEF"] = "✍️ Новая регистрация\nID: #USER_ID#\nЛогин: #LOGIN#\nEmail: #EMAIL#";
+$MESS["USH_TG_TPL_USER_REGISTERED_DEF"] = "✍️ Новая регистрация\nID: #USER_ID#\nЛогин: #LOGIN#\nEmail: #EMAIL#\nСсылка: #ADMIN_URL#";
 $MESS["USH_TG_TPL_FORM_NEW_DEF"] = "";
 $MESS["USH_TG_TPL_SHIPMENT_STATUS_DEF"] = "⛟ Отгрузка по заказу #ORDER_ID#: #SHIPMENT_STATUS#\nДоставка: #DELIVERY_NAME#\nТрек: #TRACKING#\nСсылка: #ADMIN_URL#";
 

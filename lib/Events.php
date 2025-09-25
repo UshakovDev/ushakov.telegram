@@ -805,10 +805,12 @@ class Events
         }
 
         $tpl = Option::get('ushakov.telegram','TPL_USER_REGISTERED', Loc::getMessage('USH_TG_TPL_USER_REGISTERED_DEF'));
+        $adminUrl = self::buildAbsoluteUrl('/bitrix/admin/user_edit.php?ID='.(int)$userId.'&lang='.LANGUAGE_ID);
         $text = self::render($tpl, [
-            'USER_ID' => $userId,
-            'LOGIN'   => is_array($fields) ? (string)($fields['LOGIN'] ?? '') : '',
-            'EMAIL'   => is_array($fields) ? (string)($fields['EMAIL'] ?? '') : '',
+            'USER_ID'   => $userId,
+            'LOGIN'     => is_array($fields) ? (string)($fields['LOGIN'] ?? '') : '',
+            'EMAIL'     => is_array($fields) ? (string)($fields['EMAIL'] ?? '') : '',
+            'ADMIN_URL' => $adminUrl,
         ]);
         self::pushOrSend($text);
     }

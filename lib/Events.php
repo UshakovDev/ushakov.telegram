@@ -764,13 +764,54 @@ class Events
     // Регистрация пользователя
     public static function onUserRegistered($fields): void
     {
-        // Админское уведомление о регистрации - по флагу
+
         if (Option::get('ushakov.telegram','SEND_USER_REGISTERED','N') !== 'Y') { return; }
+
+        // Отправляем только при успешном создании пользователя
+        $userId = 0;
+        if (is_array($fields)) {
+            $userId = (int)($fields['ID'] ?? 0);
+            if (array_key_exists('RESULT', $fields) && $fields['RESULT'] === false) { return; }
+        }
+        if ($userId <= 0) { return; }
+
+        // Дедупликация в рамках запроса
+        static $sentOnce = [];
+        if (isset($sentOnce[$userId])) { return; }
+        $sentOnce[$userId] = true;
+
+        // Короткая кросс-запросная дедупликация
+        try {
+            $cache = new \CPHPCache();
+            $ttl = 300; // 5 минут
+            $dir = '/ushakov_tg/user_registered';
+            $cid = 'user_'.$userId;
+            if ($cache->InitCache($ttl, $cid, $dir)) { return; }
+            if ($cache->StartDataCache()) { $cache->EndDataCache(['t'=>time()]); }
+        } catch (\Throwable $e) { /* ignore */ }
+
+        // Дотянем логин/email из БД при необходимости
+        if ((!is_array($fields)) || ($fields['LOGIN'] ?? '') === '' || ($fields['EMAIL'] ?? '') === '') {
+            try {
+                $rs = \CUser::GetByID($userId);
+                if ($rs && ($u = $rs->Fetch())) {
+                    if (is_array($fields)) {
+                        $fields['LOGIN'] = $fields['LOGIN'] ?? (string)$u['LOGIN'];
+                        $fields['EMAIL'] = $fields['EMAIL'] ?? (string)$u['EMAIL'];
+                    } else {
+                        $fields = ['LOGIN'=>(string)$u['LOGIN'], 'EMAIL'=>(string)$u['EMAIL']];
+                    }
+                }
+            } catch (\Throwable $e) { /* ignore */ }
+        }
+
         $tpl = Option::get('ushakov.telegram','TPL_USER_REGISTERED', Loc::getMessage('USH_TG_TPL_USER_REGISTERED_DEF'));
+        $adminUrl = self::buildAbsoluteUrl('/bitrix/admin/user_edit.php?ID='.(int)$userId.'&lang='.LANGUAGE_ID);
         $text = self::render($tpl, [
-            'USER_ID' => $fields['ID'] ?? '',
-            'LOGIN'   => $fields['LOGIN'] ?? '',
-            'EMAIL'   => $fields['EMAIL'] ?? '',
+            'USER_ID'   => $userId,
+            'LOGIN'     => is_array($fields) ? (string)($fields['LOGIN'] ?? '') : '',
+            'EMAIL'     => is_array($fields) ? (string)($fields['EMAIL'] ?? '') : '',
+            'ADMIN_URL' => $adminUrl,
         ]);
         self::pushOrSend($text);
     }

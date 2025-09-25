@@ -53,6 +53,7 @@ if ($request->isPost() && check_bitrix_sessid()) {
             'TPL_ORDER_UNCANCELED',
             'TPL_USER_REGISTERED',
             'TPL_FORM_NEW',
+            'TPL_SHIPMENT_STATUS',
         ] as $optName) {
             Option::delete($module_id, ['name' => $optName]);
         }

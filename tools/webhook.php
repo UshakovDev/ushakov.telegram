@@ -99,11 +99,8 @@ if (preg_match('~^/(stop|unlink)(?:@[A-Za-z0-9_]+)?(?:\s+|=|$)~ui', $text)) {
         }
     } catch (\Throwable $e) { /* ignore */ }
     if ($token !== '') {
-        $q = http_build_query([
-            'chat_id' => $chatIdRaw,
-            'text' => "Вы отписались от уведомлений. Чтобы подписаться снова - свяжите Telegram в личном кабинете.",
-        ]);
-        @file_get_contents("https://api.telegram.org/bot{$token}/sendMessage?{$q}");
+
+        \Ushakov\Telegram\Sender::send($token, [(string)$chatIdRaw], "Вы отписались от уведомлений. Чтобы подписаться снова - свяжите Telegram в личном кабинете.");
     }
     http_response_code(200);
     echo 'ok';
@@ -174,21 +171,9 @@ if (mb_stripos($text, '/start') === 0 || mb_stripos($text, '/link') === 0 || pre
         }
 
 
-        if ($token !== '') {
-            $q = http_build_query([
-                'chat_id' => $chatIdRaw,
-                'text' => "✅ Привязка выполнена. Вы будете получать уведомления о заказах.",
-            ]);
-            @file_get_contents("https://api.telegram.org/bot{$token}/sendMessage?{$q}");
-        }
+        if ($token !== '') { \Ushakov\Telegram\Sender::send($token, [(string)$chatIdRaw], "✅ Привязка выполнена. Вы будете получать уведомления о заказах."); }
     } else {
-        if ($token !== '') {
-            $q = http_build_query([
-                'chat_id' => $chatIdRaw,
-                'text' => "Не удалось подтвердить привязку. Вернитесь на сайт и нажмите «Привязать Telegram» ещё раз.",
-            ]);
-            @file_get_contents("https://api.telegram.org/bot{$token}/sendMessage?{$q}");
-        }
+        if ($token !== '') { \Ushakov\Telegram\Sender::send($token, [(string)$chatIdRaw], "Не удалось подтвердить привязку. Вернитесь на сайт и нажмите «Привязать Telegram» ещё раз."); }
     }
 }
 

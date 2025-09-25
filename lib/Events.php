@@ -764,6 +764,7 @@ class Events
     // Регистрация пользователя
     public static function onUserRegistered($fields): void
     {
+
         if (Option::get('ushakov.telegram','SEND_USER_REGISTERED','N') !== 'Y') { return; }
 
         // Отправляем только при успешном создании пользователя

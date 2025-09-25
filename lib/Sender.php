@@ -28,6 +28,8 @@ class Sender
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
             curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+            // На некоторых хостингах IPv6/DNS может работать нестабильно — форсим IPv4
+            if (defined('CURL_IPRESOLVE_V4')) { curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4); }
             curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
             curl_exec($ch);
             curl_close($ch);

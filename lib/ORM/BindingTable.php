@@ -32,7 +32,7 @@ class BindingTable extends DataManager
                 'required' => true,
                 'default_value' => 0,
             ]),
-            // chat_id может быть 64-bit или отрицательным — храним строкой
+            // chat_id может быть 64-bit или отрицательным - храним строкой
             new StringField('CHAT_ID', [
                 'required' => true,
             ]),

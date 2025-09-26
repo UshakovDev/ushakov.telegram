@@ -22,7 +22,7 @@ $secretKeep  = (string) Option::get($MODULE_ID, 'WEBHOOK_SECRET', '');
 $token       = (string) Option::get($MODULE_ID, 'BOT_TOKEN', '');
 
 // Вебхук должен быть доступен даже без BOT_TOKEN (только без исходящих сообщений)
-// Если в опциях пусто — попробуем прочитать напрямую из b_option (на случай кеша)
+// Если в опциях пусто - попробуем прочитать напрямую из b_option (на случай кеша)
 if ($secretKeep === '') {
     try {
         $conn = Application::getConnection();
@@ -86,7 +86,7 @@ if ($chatIdRaw === '' ) {
 // 1) "/start <payload>" (с пробелом)
 // 2) "/start<payload>" (без пробела)
 // 3) просто "<payload>" отдельным сообщением
-// Отписка: /stop или /unlink — поддержка вариантов /stop, /stop@Bot, 
+// Отписка: /stop или /unlink - поддержка вариантов /stop, /stop@Bot, 
 // с любыми пробелами/аргументами после команды
 if (preg_match('~^/(stop|unlink)(?:@[A-Za-z0-9_]+)?(?:\s+|=|$)~ui', $text)) {
     try {
@@ -133,7 +133,7 @@ if (mb_stripos($text, '/start') === 0 || mb_stripos($text, '/link') === 0 || pre
     }
 
 
-    // Таблица создаётся/мигрируется в InstallDB. Здесь — только доступ к данным.
+    // Таблица создаётся/мигрируется в InstallDB. Здесь - только доступ к данным.
 
     /** @var \Bitrix\Main\DB\Connection $conn */
     $conn = Application::getConnection();
@@ -158,7 +158,7 @@ if (mb_stripos($text, '/start') === 0 || mb_stripos($text, '/link') === 0 || pre
 
         $chatIdSql     = $sqlHelper->forSql($chatIdRaw);
 
-        // В проде таблица создаётся установщиком; если её нет — пропускаем запись, чтобы не ронять вебхук
+        // В проде таблица создаётся установщиком; если её нет - пропускаем запись, чтобы не ронять вебхук
         try {
             if ($conn && $conn->isTableExists($table)) {
                 $sqlIns = "INSERT INTO {$table} (SITE_ID, USER_ID, CHAT_ID, TG_USERNAME, CONSENT, ROLE, IS_STAFF, LAST_USED_AT, CREATED_AT)

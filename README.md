@@ -16,13 +16,13 @@
 
 ## Скриншоты
 ### Настройки модуля
-![Settings 1](./images/settings1.jpg)
-![Settings 2](./images/settings2.jpg)
-![Settings 3](./images/settings3.jpg)
+![Settings 1](docs/images/settings1.jpg)
+![Settings 2](docs/images/settings2.jpg)
+![Settings 3](docs/images/settings3.jpg)
 
 ### Кнопка «Привязать Telegram»
-![Bind Telegram 1](./images/bind-telegram1.jpg)
-![Bind Telegram 2](./images/bind-telegram2.jpg)
+![Bind Telegram 1](docs/images/bind-telegram1.jpg)
+![Bind Telegram 2](docs/images/bind-telegram2.jpg)
 
 ## Установка
 Кратко:

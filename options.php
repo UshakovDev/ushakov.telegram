@@ -231,9 +231,11 @@ $tabControl->Begin();
                             echo '<div>'.htmlspecialcharsbx($err).'</div>';
                         } else {
                             $resp = (array)($info['response'] ?? []);
-                            $url  = (string)($resp['url'] ?? '');
-                            $pending = (int)($resp['pending_update_count'] ?? 0);
-                            $lastErr = (string)($resp['last_error_message'] ?? '');
+                            // У Telegram полезные поля лежат в result
+                            $data = (array)($resp['result'] ?? $resp);
+                            $url  = (string)($data['url'] ?? '');
+                            $pending = (int)($data['pending_update_count'] ?? 0);
+                            $lastErr = (string)($data['last_error_message'] ?? '');
                             echo '<div>'.Loc::getMessage('USH_TG_WEBHOOK_INFO_URL').': '.htmlspecialcharsbx($url).'</div>';
                             echo '<div>'.Loc::getMessage('USH_TG_WEBHOOK_INFO_PENDING').': '.$pending.'</div>';
                             if ($lastErr !== '') {

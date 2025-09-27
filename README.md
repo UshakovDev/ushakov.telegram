@@ -60,6 +60,6 @@
 Проект распространяется по лицензии MIT - см. файл [LICENSE](./LICENSE).
 
 ## Контакты
-Автор: Dmitry Ushakov (UshakovDev)
-GitHub: https://github.com/UshakovDev
+Автор: Dmitry Ushakov (UshakovDev)<br>
+GitHub: https://github.com/UshakovDev<br>
 Telegram: https://t.me/user_four

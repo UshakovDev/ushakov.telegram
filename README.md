@@ -1,6 +1,6 @@
 # ushakov.telegram - модуль интеграции Bitrix с Telegram
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](./docs/CHANGELOG.md)
+<!-- [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](./docs/CHANGELOG.md) -->
 [![Release](https://img.shields.io/github/v/release/UshakovDev/ushakov.telegram?sort=semver)](https://github.com/UshakovDev/ushakov.telegram/releases)
 [![Issues](https://img.shields.io/github/issues/UshakovDev/ushakov.telegram)](https://github.com/UshakovDev/ushakov.telegram/issues)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)

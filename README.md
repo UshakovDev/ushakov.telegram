@@ -2,6 +2,7 @@
 
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](./docs/CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
+![php](https://img.shields.io/badge/PHP-7.4%2B%20|%208.0%2B-blue)
 [![Bitrix](https://img.shields.io/badge/Bitrix-D7%20Module-orange.svg)](https://dev.1c-bitrix.ru)
 
 Лёгкий и надёжный модуль для отправки уведомлений из 1C‑Bitrix в Telegram: новые заказы, оплаты, смены статусов, отмены/снятие отмены, статусы отгрузок и регистрация пользователей. Поддерживает уведомления как для сотрудников, так и для покупателей.
